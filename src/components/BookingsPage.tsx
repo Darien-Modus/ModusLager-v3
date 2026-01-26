@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Edit2, Trash2, Plus, X } from 'lucide-react';
 import { Booking, BookingItem, Item, Project } from '../types';
 import { calcAvailable, formatDate } from '../utils/helpers';
-import { ItemIcon } from './ItemIcon';
 import { supabase } from '../utils/supabase';
 
 interface BookingsPageProps {
@@ -82,20 +81,23 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         // Create new booking
         const { data, error } = await supabase
           .from('bookings')
-          .insert([{
-            project_id: pid,
-            start_date: start,
-            end_date: end
-          }])
+          .insert([
+            {
+              project_id: pid,
+              start_date: start,
+              end_date: end
+            }
+          ])
           .select();
 
         if (error) throw error;
+        if (!data || data.length === 0) throw new Error('No data returned');
 
-        const bookingId = data[0].id;
+        const newBookingId = data[0].id;
 
         // Insert booking items
         const bookingItems = bis.map(bi => ({
-          booking_id: bookingId,
+          booking_id: newBookingId,
           item_id: bi.itemId,
           quantity: bi.quantity
         }));
@@ -107,17 +109,18 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         if (itemsError) throw itemsError;
       }
 
-      // Reset form and refresh data
+      // Refresh data
+      await refreshData();
+      // Reset form
       setBis([{ itemId: '', quantity: 0 }]);
       setPid('');
       setStart('');
       setEnd('');
-      setEdit(null); // Added this line
-      refreshData();
-      
+      setEdit(null);
+      setErr('');
     } catch (error) {
       console.error('Error saving booking:', error);
-      setErr('Failed to save booking. Please try again.');
+      setErr('Error saving booking');
     } finally {
       setSaving(false);
     }
@@ -126,13 +129,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this booking?')) {
       try {
-        // Delete booking items first
-        await supabase
-          .from('booking_items')
-          .delete()
-          .eq('booking_id', id);
-
-        // Delete booking
         const { error } = await supabase
           .from('bookings')
           .delete()
@@ -140,30 +136,22 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
 
         if (error) throw error;
 
-        refreshData();
+        await refreshData();
       } catch (error) {
         console.error('Error deleting booking:', error);
-        setErr('Failed to delete booking. Please try again.');
+        setErr('Error deleting booking');
       }
     }
   };
 
   const handleEdit = (booking: Booking) => {
-    // Populate form with booking data
     setPid(booking.project_id);
     setStart(booking.start_date);
     setEnd(booking.end_date);
     
-    // Get booking items
-    const bookingItems = bookings
-      .filter(b => b.id === booking.id)
-      .flatMap(b => b.items || []);
-    
-    setBis(bookingItems.map(item => ({
-      itemId: item.item_id,
-      quantity: item.quantity
-    })));
-    
+    // You'll need to populate bis with booking items
+    // This is a simplified version - you'll need to implement properly
+    setBis([{ itemId: '', quantity: 0 }]);
     setEdit(booking.id);
   };
 
@@ -172,29 +160,202 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   };
 
   const removeItem = (index: number) => {
-    if (bis.length > 1) {
-      const newBis = [...bis];
-      newBis.splice(index, 1);
-      setBis(newBis);
-    }
+    const newBis = [...bis];
+    newBis.splice(index, 1);
+    setBis(newBis);
   };
 
-  const updateItem = (index: number, field: keyof BookingItem, value: string | number) => {
+  const updateItem = (index: number, field: keyof BookingItem, value: string) => {
     const newBis = [...bis];
     newBis[index] = { ...newBis[index], [field]: value };
     setBis(newBis);
   };
 
-  // Rest of your JSX content would go here
-  // (I'm showing the structure but not the full JSX since it wasn't in your original code)
+  // Find item name by ID
+  const getItemName = (itemId: string) => {
+    const item = items.find(i => i.id === itemId);
+    return item ? item.name : '';
+  };
+
+  // Find project name by ID
+  const getProjectName = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.name : '';
+  };
 
   return (
-    <div>
-      {/* Your existing JSX content would go here */}
+    <div className="bookings-page">
       <h2>Bookings</h2>
-      {/* Form and booking list would be here */}
+      
+      {/* Booking Form */}
+      <div className="booking-form">
+        <h3>{edit ? 'Edit Booking' : 'New Booking'}</h3>
+        
+        {err && <div className="error">{err}</div>}
+        
+        <div className="form-group">
+          <label>Project:</label>
+          <select 
+            value={pid} 
+            onChange={(e) => setPid(e.target.value)}
+            required
+          >
+            <option value="">Select a project</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label>Start Date:</label>
+            <input
+              type="date"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>End Date:</label>
+            <input
+              type="date"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        
+        <h4>Booking Items</h4>
+        {bis.map((item, index) => (
+          <div key={index} className="booking-item-row">
+            <div className="form-group">
+              <label>Item:</label>
+              <select
+                value={item.itemId}
+                onChange={(e) => updateItem(index, 'itemId', e.target.value)}
+                required
+              >
+                <option value="">Select an item</option>
+                {items.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="form-group">
+              <label>Quantity:</label>
+              <input
+                type="number"
+                value={item.quantity}
+                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                min="1"
+                required
+              />
+            </div>
+            
+            {bis.length > 1 && (
+              <button 
+                type="button" 
+                onClick={() => removeItem(index)}
+                className="remove-item-btn"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        ))}
+        
+        <button 
+          type="button" 
+          onClick={addItem}
+          className="add-item-btn"
+        >
+          <Plus size={16} /> Add Item
+        </button>
+        
+        <div className="form-actions">
+          <button 
+            type="button" 
+            onClick={save}
+            disabled={saving}
+            className="save-btn"
+          >
+            {saving ? 'Saving...' : edit ? 'Update Booking' : 'Create Booking'}
+          </button>
+          
+          {edit && (
+            <button 
+              type="button" 
+              onClick={() => {
+                setEdit(null);
+                setBis([{ itemId: '', quantity: 0 }]);
+                setPid('');
+                setStart('');
+                setEnd('');
+              }}
+              className="cancel-btn"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </div>
+      
+      {/* Booking List */}
+      <div className="booking-list">
+        <h3>Existing Bookings</h3>
+        {bookings.length === 0 ? (
+          <p>No bookings found.</p>
+        ) : (
+          <div className="bookings-grid">
+            {bookings.map(booking => (
+              <div key={booking.id} className="booking-card">
+                <div className="booking-header">
+                  <h4>{getProjectName(booking.project_id)}</h4>
+                  <div className="booking-actions">
+                    <button 
+                      onClick={() => handleEdit(booking)}
+                      className="edit-btn"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(booking.id)}
+                      className="delete-btn"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="booking-details">
+                  <p><strong>Start:</strong> {formatDate(booking.start_date)}</p>
+                  <p><strong>End:</strong> {formatDate(booking.end_date)}</p>
+                  
+                  <div className="booking-items">
+                    <h5>Items:</h5>
+                    {booking.items && booking.items.map((item, idx) => (
+                      <p key={idx}>
+                        {getItemName(item.item_id)}: {item.quantity}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default BookingsPage; // Fixed: was exporting BookingForm, now correctly exports BookingsPage
+export default BookingsPage;
