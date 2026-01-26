@@ -13,7 +13,7 @@ interface BookingsPageProps {
   refreshData: () => void;
 }
 
-export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, setBookings, items, projects, refreshData }) => {
+export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, refreshData }) => {
   const [bis, setBis] = useState<BookingItem[]>([{ itemId: '', quantity: 0 }]);
   const [pid, setPid] = useState('');
   const [start, setStart] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, Package, BookOpen, BarChart3, LogOut } from 'lucide-react';
 import { Item, Project, Booking } from './types';
 import { supabase } from './utils/supabase';

@@ -9,7 +9,7 @@ interface ProjectsPageProps {
   refreshData: () => void;
 }
 
-export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, setProjects, refreshData }) => {
+export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, refreshData }) => {
   const [form, setForm] = useState({ name: '', num: '', client: '' });
   const [edit, setEdit] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
