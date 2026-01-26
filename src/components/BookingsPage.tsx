@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Plus, X } from 'lucide-react';
-import { supabase } from '../utils/supabase';
 
 interface Booking {
   id: string;
   project_id: string;
+  item_id: string;
   start_date: string;
   end_date: string;
-  items?: any[];
+  status: string;
 }
 
 interface Item {
@@ -20,288 +19,316 @@ interface Project {
   name: string;
 }
 
-interface BookingItem {
-  id: string;
-  booking_id: string;
-  item_id: string;
-  quantity: number;
-}
-
 interface BookingsPageProps {
   bookings: Booking[];
   items: Item[];
   projects: Project[];
-  refreshData: () => void;
+  refreshData: () => Promise<void>;
 }
 
-export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, refreshData }) => {
-  const [bis, setBis] = useState<BookingItem[]>([{ item_id: '', quantity: 0 }]);
-  const [pid, setPid] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
-  const [edit, setEdit] = useState<string | null>(null);
-  const [err, setErr] = useState('');
-  const [saving, setSaving] = useState(false);
+const BookingsPage: React.FC<BookingsPageProps> = ({ 
+  bookings, 
+  items, 
+  projects, 
+  refreshData 
+}) => {
+  const [formData, setFormData] = useState({
+    project_id: '',
+    item_id: '',
+    start_date: '',
+    end_date: '',
+    status: 'pending'
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    project_id: '',
+    item_id: '',
+    start_date: '',
+    end_date: '',
+    status: 'pending'
+  });
 
-  const saveBooking = async () => {
-    if (!pid || !start || !end) {
-      setErr('Please fill all required fields');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (edit) {
-        // Update existing booking
-        const { error } = await supabase
-          .from('bookings')
-          .update({
-            project_id: pid,
-            start_date: start,
-            end_date: end
-          })
-          .eq('id', edit);
-
-        if (error) throw error;
-      } else {
-        // Create new booking
-        const { error } = await supabase
-          .from('bookings')
-          .insert({
-            project_id: pid,
-            start_date: start,
-            end_date: end
-          });
-
-        if (error) throw error;
-      }
-
-      await refreshData();
-      setBis([{ item_id: '', quantity: 0 }]);
-      setPid('');
-      setStart('');
-      setEnd('');
-      setEdit(null);
-      setErr('');
-    } catch (error) {
-      console.error('Error saving booking:', error);
-      setErr('Error saving booking');
-    } finally {
-      setSaving(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
-      try {
-        const { error } = await supabase
-          .from('bookings')
-          .delete()
-          .eq('id', id);
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
 
-        if (error) throw error;
-
-        await refreshData();
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        setErr('Error deleting booking');
-      }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert([formData]);
+      
+      if (error) throw error;
+      
+      await refreshData();
+      setFormData({
+        project_id: '',
+        item_id: '',
+        start_date: '',
+        end_date: '',
+        status: 'pending'
+      });
+    } catch (error) {
+      console.error('Error creating booking:', error);
     }
   };
 
   const handleEdit = (booking: Booking) => {
-    setPid(booking.project_id);
-    setStart(booking.start_date);
-    setEnd(booking.end_date);
-    setEdit(booking.id);
+    setEditingId(booking.id);
+    setEditForm({
+      project_id: booking.project_id,
+      item_id: booking.item_id,
+      start_date: booking.start_date,
+      end_date: booking.end_date,
+      status: booking.status
+    });
   };
 
-  const addItem = () => {
-    setBis([...bis, { item_id: '', quantity: 0 }]);
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .update(editForm)
+        .eq('id', editingId);
+      
+      if (error) throw error;
+      
+      await refreshData();
+      setEditingId(null);
+    } catch (error) {
+      console.error('Error updating booking:', error);
+    }
   };
 
-  const removeItem = (index: number) => {
-    const newBis = [...bis];
-    newBis.splice(index, 1);
-    setBis(newBis);
-  };
-
-  const updateItem = (index: number, field: keyof BookingItem, value: string) => {
-    const newBis = [...bis];
-    newBis[index] = { ...newBis[index], [field]: value };
-    setBis(newBis);
-  };
-
-  // Find item name by ID
-  const getItemName = (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    return item ? item.name : '';
-  };
-
-  // Find project name by ID
-  const getProjectName = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.name : '';
+  const handleDelete = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      await refreshData();
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+    }
   };
 
   return (
     <div className="bookings-page">
-      <h2>Bookings</h2>
+      <h2>Booking Management</h2>
       
       {/* Booking Form */}
       <div className="booking-form">
-        <h3>{edit ? 'Edit Booking' : 'New Booking'}</h3>
-        
-        {err && <div className="error">{err}</div>}
-        
-        <div className="form-group">
-          <label>Project:</label>
-          <select 
-            value={pid} 
-            onChange={(e) => setPid(e.target.value)}
-            required
-          >
-            <option value="">Select a project</option>
-            {projects.map(project => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="form-row">
+        <h3>Create New Booking</h3>
+        <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Start Date:</label>
-            <input
-              type="date"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
+            <label>Project:</label>
+            <select 
+              name="project_id" 
+              value={formData.project_id} 
+              onChange={handleInputChange}
               required
-            />
+            >
+              <option value="">Select Project</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
           </div>
+          
           <div className="form-group">
-            <label>End Date:</label>
-            <input
-              type="date"
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
+            <label>Item:</label>
+            <select 
+              name="item_id" 
+              value={formData.item_id} 
+              onChange={handleInputChange}
               required
-            />
+            >
+              <option value="">Select Item</option>
+              {items.map(item => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-        
-        <div className="form-group">
-          <label>Items:</label>
-          {bis.map((item, index) => (
-            <div key={index} className="item-row">
-              <select
-                value={item.item_id}
-                onChange={(e) => updateItem(index, 'item_id', e.target.value)}
-                required
-              >
-                <option value="">Select Item</option>
-                {items.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label>Start Date:</label>
               <input
-                type="number"
-                value={item.quantity}
-                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                placeholder="Quantity"
-                min="1"
+                type="date"
+                name="start_date"
+                value={formData.start_date}
+                onChange={handleInputChange}
                 required
               />
-              {bis.length > 1 && (
-                <button
-                  type="button"
-                  className="remove-item-btn"
-                  onClick={() => removeItem(index)}
-                >
-                  <X size={16} />
-                </button>
-              )}
             </div>
-          ))}
-          <button
-            type="button"
-            className="add-item-btn"
-            onClick={addItem}
-          >
-            <Plus size={16} /> Add Item
-          </button>
-        </div>
-        
-        <button
-          type="button"
-          className="save-btn"
-          onClick={saveBooking}
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : edit ? 'Update Booking' : 'Create Booking'}
-        </button>
-        
-        {edit && (
-          <button
-            type="button"
-            className="cancel-btn"
-            onClick={() => {
-              setEdit(null);
-              setPid('');
-              setStart('');
-              setEnd('');
-              setBis([{ item_id: '', quantity: 0 }]);
-            }}
-          >
-            Cancel
-          </button>
-        )}
+            
+            <div className="form-group">
+              <label>End Date:</label>
+              <input
+                type="date"
+                name="end_date"
+                value={formData.end_date}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label>Status:</label>
+            <select 
+              name="status" 
+              value={formData.status} 
+              onChange={handleInputChange}
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          
+          <button type="submit" className="save-btn">Create Booking</button>
+        </form>
       </div>
-      
-      {/* Booking List */}
+
+      {/* Bookings List */}
       <div className="booking-list">
         <h3>Bookings</h3>
         {bookings.length === 0 ? (
           <p>No bookings found.</p>
         ) : (
-          bookings.map(booking => (
-            <div key={booking.id} className="booking-card">
-              <div className="booking-header">
-                <h4>{getProjectName(booking.project_id)}</h4>
-                <div className="booking-actions">
-                  <button
-                    className="edit-btn"
-                    onClick={() => handleEdit(booking)}
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDelete(booking.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-              <div className="booking-details">
-                <p><strong>Start Date:</strong> {booking.start_date}</p>
-                <p><strong>End Date:</strong> {booking.end_date}</p>
-                {booking.items && booking.items.length > 0 && (
-                  <div className="booking-items">
-                    <p><strong>Items:</strong></p>
-                    {booking.items.map((item, index) => (
-                      <p key={index}>
-                        {getItemName(item.item_id)}: {item.quantity}
-                      </p>
-                    ))}
+          <div className="bookings-grid">
+            {bookings.map(booking => {
+              const project = projects.find(p => p.id === booking.project_id);
+              const item = items.find(i => i.id === booking.item_id);
+              
+              return (
+                <div key={booking.id} className="booking-card">
+                  <div className="booking-header">
+                    <h4>{project?.name || 'Unknown Project'}</h4>
+                    <div className="booking-actions">
+                      <button 
+                        onClick={() => handleEdit(booking)}
+                        className="edit-btn"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(booking.id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          ))
+                  
+                  <div className="booking-details">
+                    <p><strong>Item:</strong> {item?.name || 'Unknown Item'}</p>
+                    <p><strong>Start Date:</strong> {booking.start_date}</p>
+                    <p><strong>End Date:</strong> {booking.end_date}</p>
+                    <p><strong>Status:</strong> {booking.status}</p>
+                  </div>
+                  
+                  {editingId === booking.id && (
+                    <div className="edit-form">
+                      <h4>Edit Booking</h4>
+                      <div className="form-group">
+                        <label>Project:</label>
+                        <select 
+                          name="project_id" 
+                          value={editForm.project_id} 
+                          onChange={handleEditInputChange}
+                        >
+                          {projects.map(project => (
+                            <option key={project.id} value={project.id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Item:</label>
+                        <select 
+                          name="item_id" 
+                          value={editForm.item_id} 
+                          onChange={handleEditInputChange}
+                        >
+                          {items.map(item => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Start Date:</label>
+                          <input
+                            type="date"
+                            name="start_date"
+                            value={editForm.start_date}
+                            onChange={handleEditInputChange}
+                          />
+                        </div>
+                        
+                        <div className="form-group">
+                          <label>End Date:</label>
+                          <input
+                            type="date"
+                            name="end_date"
+                            value={editForm.end_date}
+                            onChange={handleEditInputChange}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Status:</label>
+                        <select 
+                          name="status" 
+                          value={editForm.status} 
+                          onChange={handleEditInputChange}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                      
+                      <button onClick={handleUpdate} className="save-btn">Update</button>
+                      <button 
+                        onClick={() => setEditingId(null)}
+                        className="cancel-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
