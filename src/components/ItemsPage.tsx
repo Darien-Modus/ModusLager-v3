@@ -12,7 +12,7 @@ interface ItemsPageProps {
   refreshData: () => void;
 }
 
-export const ItemsPage: React.FC<ItemsPageProps> = ({ items, setItems, bookings, refreshData }) => {
+export const ItemsPage: React.FC<ItemsPageProps> = ({ items, refreshData }) => {
   const [form, setForm] = useState({ name: '', qty: '', color: 'alu' });
   const [edit, setEdit] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
