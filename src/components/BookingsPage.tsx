@@ -1,8 +1,31 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, Plus, X } from 'lucide-react';
-import { Booking, BookingItem, Item, Project } from '../types';
-import { calcAvailable, formatDate } from '../utils/helpers';
 import { supabase } from '../utils/supabase';
+
+interface Booking {
+  id: string;
+  project_id: string;
+  start_date: string;
+  end_date: string;
+  items?: any[];
+}
+
+interface Item {
+  id: string;
+  name: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+}
+
+interface BookingItem {
+  id: string;
+  booking_id: string;
+  item_id: string;
+  quantity: number;
+}
 
 interface BookingsPageProps {
   bookings: Booking[];
@@ -12,7 +35,7 @@ interface BookingsPageProps {
 }
 
 export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, refreshData }) => {
-  const [bis, setBis] = useState<BookingItem[]>([{ itemId: '', quantity: 0 }]);
+  const [bis, setBis] = useState<BookingItem[]>([{ item_id: '', quantity: 0 }]);
   const [pid, setPid] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
@@ -54,7 +77,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       }
 
       await refreshData();
-      setBis([{ itemId: '', quantity: 0 }]);
+      setBis([{ item_id: '', quantity: 0 }]);
       setPid('');
       setStart('');
       setEnd('');
@@ -94,7 +117,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   };
 
   const addItem = () => {
-    setBis([...bis, { itemId: '', quantity: 0 }]);
+    setBis([...bis, { item_id: '', quantity: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -157,7 +180,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
               required
             />
           </div>
-          
           <div className="form-group">
             <label>End Date:</label>
             <input
@@ -169,127 +191,117 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           </div>
         </div>
         
-        <h4>Booking Items</h4>
-        {bis.map((item, index) => (
-          <div key={index} className="booking-item-row">
-            <div className="form-group">
-              <label>Item:</label>
+        <div className="form-group">
+          <label>Items:</label>
+          {bis.map((item, index) => (
+            <div key={index} className="item-row">
               <select
-                value={item.itemId}
-                onChange={(e) => updateItem(index, 'itemId', e.target.value)}
+                value={item.item_id}
+                onChange={(e) => updateItem(index, 'item_id', e.target.value)}
                 required
               >
-                <option value="">Select an item</option>
+                <option value="">Select Item</option>
                 {items.map(item => (
                   <option key={item.id} value={item.id}>
                     {item.name}
                   </option>
                 ))}
               </select>
-            </div>
-            
-            <div className="form-group">
-              <label>Quantity:</label>
               <input
                 type="number"
                 value={item.quantity}
                 onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                placeholder="Quantity"
                 min="1"
                 required
               />
+              {bis.length > 1 && (
+                <button
+                  type="button"
+                  className="remove-item-btn"
+                  onClick={() => removeItem(index)}
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            
-            {bis.length > 1 && (
-              <button 
-                type="button" 
-                onClick={() => removeItem(index)}
-                className="remove-item-btn"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        ))}
+          ))}
+          <button
+            type="button"
+            className="add-item-btn"
+            onClick={addItem}
+          >
+            <Plus size={16} /> Add Item
+          </button>
+        </div>
         
-        <button 
-          type="button" 
-          onClick={addItem}
-          className="add-item-btn"
+        <button
+          type="button"
+          className="save-btn"
+          onClick={saveBooking}
+          disabled={saving}
         >
-          <Plus size={16} /> Add Item
+          {saving ? 'Saving...' : edit ? 'Update Booking' : 'Create Booking'}
         </button>
         
-        <div className="form-actions">
-          <button 
-            type="button" 
-            onClick={saveBooking}
-            disabled={saving}
-            className="save-btn"
+        {edit && (
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={() => {
+              setEdit(null);
+              setPid('');
+              setStart('');
+              setEnd('');
+              setBis([{ item_id: '', quantity: 0 }]);
+            }}
           >
-            {saving ? 'Saving...' : edit ? 'Update Booking' : 'Create Booking'}
+            Cancel
           </button>
-          
-          {edit && (
-            <button 
-              type="button" 
-              onClick={() => {
-                setEdit(null);
-                setBis([{ itemId: '', quantity: 0 }]);
-                setPid('');
-                setStart('');
-                setEnd('');
-              }}
-              className="cancel-btn"
-            >
-              Cancel
-            </button>
-          )}
-        </div>
+        )}
       </div>
       
       {/* Booking List */}
       <div className="booking-list">
-        <h3>Existing Bookings</h3>
+        <h3>Bookings</h3>
         {bookings.length === 0 ? (
           <p>No bookings found.</p>
         ) : (
-          <div className="bookings-grid">
-            {bookings.map(booking => (
-              <div key={booking.id} className="booking-card">
-                <div className="booking-header">
-                  <h4>{getProjectName(booking.project_id)}</h4>
-                  <div className="booking-actions">
-                    <button 
-                      onClick={() => handleEdit(booking)}
-                      className="edit-btn"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(booking.id)}
-                      className="delete-btn"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+          bookings.map(booking => (
+            <div key={booking.id} className="booking-card">
+              <div className="booking-header">
+                <h4>{getProjectName(booking.project_id)}</h4>
+                <div className="booking-actions">
+                  <button
+                    className="edit-btn"
+                    onClick={() => handleEdit(booking)}
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(booking.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
-                
-                <div className="booking-details">
-                  <p><strong>Start:</strong> {formatDate(booking.start_date)}</p>
-                  <p><strong>End:</strong> {formatDate(booking.end_date)}</p>
-                  
+              </div>
+              <div className="booking-details">
+                <p><strong>Start Date:</strong> {booking.start_date}</p>
+                <p><strong>End Date:</strong> {booking.end_date}</p>
+                {booking.items && booking.items.length > 0 && (
                   <div className="booking-items">
-                    <h5>Items:</h5>
-                    {booking.items && booking.items.map((item, idx) => (
-                      <p key={idx}>
+                    <p><strong>Items:</strong></p>
+                    {booking.items.map((item, index) => (
+                      <p key={index}>
                         {getItemName(item.item_id)}: {item.quantity}
                       </p>
                     ))}
                   </div>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
     </div>
