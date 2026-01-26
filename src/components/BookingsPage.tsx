@@ -7,7 +7,6 @@ import { supabase } from '../utils/supabase';
 
 interface BookingsPageProps {
   bookings: Booking[];
-  setBookings: (bookings: Booking[]) => void;
   items: Item[];
   projects: Project[];
   refreshData: () => void;
@@ -23,95 +22,90 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    if (!pid || !start || !end || bis.length === 0) { 
-      setErr('All fields required'); 
-      return; 
-    }
-    
-    for (const bi of bis) {
-      if (!bi.itemId || bi.quantity <= 0) { 
-        setErr('All items need selection and quantity > 0'); 
-        return; 
-      }
-      
-      const item = items.find(i => i.id === bi.itemId);
-      if (item && bi.quantity > item.totalQuantity) {
-        setErr("Looks like you don't own so many! Check the Inventory page");
-        return;
-      }
-      
-      const avail = calcAvailable(bi.itemId, start, end, bookings, items, edit || undefined);
-      if (bi.quantity > avail) {
-        setErr("Oooops! Looks like someone beat you to it. One or more items are already booked for that period.");
-        return;
-      }
-    }
+    if (saving) return;
     
     setSaving(true);
+    setErr('');
+
+    // Validation
+    if (!pid) {
+      setErr('Please select a project');
+      setSaving(false);
+      return;
+    }
+
+    if (!start || !end) {
+      setErr('Please select start and end dates');
+      setSaving(false);
+      return;
+    }
+
+    if (bis.some(bi => !bi.itemId || bi.quantity <= 0)) {
+      setErr('Please select items and quantities');
+      setSaving(false);
+      return;
+    }
+
     try {
       if (edit) {
         // Update existing booking
-        // First update the booking itself
-        const { error: bookingError } = await supabase
+        await supabase
           .from('bookings')
           .update({
             project_id: pid,
             start_date: start,
-            end_date: end
+            end_date: end,
+            updated_at: new Date().toISOString()
           })
           .eq('id', edit);
-        
-        if (bookingError) throw bookingError;
-        
-        // Delete old booking_items
-        const { error: deleteError } = await supabase
+
+        // Update booking items
+        await supabase
           .from('booking_items')
           .delete()
           .eq('booking_id', edit);
-        
-        if (deleteError) throw deleteError;
-        
-        // Insert new booking_items
-        const bookingItems = bis.filter(b => b.itemId && b.quantity > 0).map(bi => ({
-          booking_id: edit,
-          item_id: bi.itemId,
-          quantity: bi.quantity
-        }));
-        
-        const { error: itemsError } = await supabase
-          .from('booking_items')
-          .insert(bookingItems);
-        
-        if (itemsError) throw itemsError;
+
+        // Add new booking items
+        for (const bi of bis) {
+          if (bi.itemId && bi.quantity > 0) {
+            await supabase
+              .from('booking_items')
+              .insert({
+                booking_id: edit,
+                item_id: bi.itemId,
+                quantity: bi.quantity
+              });
+          }
+        }
       } else {
         // Create new booking
         const { data: bookingData, error: bookingError } = await supabase
           .from('bookings')
-          .insert([{
+          .insert({
             project_id: pid,
             start_date: start,
             end_date: end
-          }])
+          })
           .select()
           .single();
-        
+
         if (bookingError) throw bookingError;
-        
-        // Insert booking_items
-        const bookingItems = bis.filter(b => b.itemId && b.quantity > 0).map(bi => ({
-          booking_id: bookingData.id,
-          item_id: bi.itemId,
-          quantity: bi.quantity
-        }));
-        
-        const { error: itemsError } = await supabase
-          .from('booking_items')
-          .insert(bookingItems);
-        
-        if (itemsError) throw itemsError;
+
+        // Add booking items
+        for (const bi of bis) {
+          if (bi.itemId && bi.quantity > bi.quantity) {
+            await supabase
+              .from('booking_items')
+              .insert({
+                booking_id: bookingData.id,
+                item_id: bi.itemId,
+                quantity: bi.quantity
+              });
+          }
+        }
       }
-      
-      // Refresh data from database
+
+      // Refresh data
       await refreshData();
       
       // Reset form
@@ -120,76 +114,80 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       setStart('');
       setEnd('');
       setEdit(null);
-      setErr('');
     } catch (error) {
       console.error('Error saving booking:', error);
-      alert('Error saving booking. Check console for details.');
+      setErr('Failed to save booking. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this booking?')) return;
-    
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      await refreshData();
-    } catch (error) {
-      console.error('Error deleting booking:', error);
-      alert('Error deleting booking. Check console for details.');
+    if (window.confirm('Are you sure you want to delete this booking?')) {
+      try {
+        await supabase
+          .from('booking_items')
+          .delete()
+          .eq('booking_id', id);
+
+        await supabase
+          .from('bookings')
+          .delete()
+          .eq('id', id);
+
+        await refreshData();
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        setErr('Failed to delete booking. Please try again.');
+      }
     }
   };
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Bookings Management</h2>
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold mb-4">{edit ? 'Edit Booking' : 'Create New Booking'}</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Project</label>
-              <select 
-                value={pid} 
-                onChange={e => setPid(e.target.value)} 
-                className="w-full px-4 py-2 border rounded-lg"
-                disabled={saving}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
+              <select
+                value={pid}
+                onChange={(e) => setPid(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                <option value="">Select a project</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
               </select>
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Start Date</label>
-              <input 
-                type="date" 
-                value={start} 
-                onChange={e => setStart(e.target.value)} 
-                className="w-full px-4 py-2 border rounded-lg"
-                disabled={saving}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
-              <input 
-                type="date" 
-                value={end} 
-                onChange={e => setEnd(e.target.value)} 
-                className="w-full px-4 py-2 border rounded-lg"
-                disabled={saving}
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <input
+                type="date"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
           
-          <div>
-            <div className="flex justify-between mb-3">
-              <label className="text-sm font-medium">Items to Book</label>
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">Items</label>
               <button 
                 onClick={() => setBis([...bis, { itemId: '', quantity: 0 }])} 
                 disabled={saving}
@@ -200,48 +198,57 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
             </div>
             
             {bis.map((bi, i) => (
-              <div key={i} className="mb-4">
-                <label className="block text-sm font-medium mb-2">Select Item {i + 1}</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {items.map(it => (
-                    <button
-                      key={it.id}
-                      type="button"
-                      onClick={() => { const n = [...bis]; n[i].itemId = it.id; setBis(n); }}
-                      disabled={saving}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                        bi.itemId === it.id 
-                          ? 'border-blue-600 bg-blue-50' 
-                          : 'border-gray-300 hover:border-gray-400'
-                      } disabled:opacity-50`}
+              <div key={i} className="mb-4 p-4 border border-gray-200 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Item</label>
+                    <select
+                      value={bi.itemId}
+                      onChange={(e) => { 
+                        const n = [...bis]; 
+                        n[i].itemId = e.target.value; 
+                        setBis(n); 
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <ItemIcon item={it} />
-                      <span className="text-sm font-medium">{it.name}</span>
+                      <option value="">Select an item</option>
+                      {items.map(it => (
+                        <option key={it.id} value={it.id}>{it.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      placeholder="Quantity"
+                      value={bi.quantity || ''}
+                      onChange={(e) => { 
+                        const n = [...bis]; 
+                        n[i].quantity = +e.target.value || 0; 
+                        setBis(n); 
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <button 
+                      onClick={() => setBis(bis.filter((_, idx) => idx !== i))} 
+                      disabled={bis.length === 1 || saving} 
+                      className="flex items-center justify-center gap-1 text-red-600 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed border border-red-200 rounded-lg disabled:border-gray-200 w-full py-2"
+                    >
+                      <X className="w-4 h-4" /> Remove
                     </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <input 
-                    type="number" 
-                    placeholder="Quantity" 
-                    value={bi.quantity || ''} 
-                    onChange={e => { const n = [...bis]; n[i].quantity = +e.target.value || 0; setBis(n); }} 
-                    className="px-4 py-2 border rounded-lg"
-                    disabled={saving}
-                  />
-                  <button 
-                    onClick={() => setBis(bis.filter((_, idx) => idx !== i))} 
-                    disabled={bis.length === 1 || saving} 
-                    className="flex items-center justify-center gap-1 text-red-600 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed border border-red-200 rounded-lg disabled:border-gray-200"
-                  >
-                    <X className="w-4 h-4" /> Remove
-                  </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
           
-          {err && <p className="text-red-600 font-medium">{err}</p>}
+          {err && <p className="text-red-600 font-medium mb-4">{err}</p>}
+          
           <button 
             onClick={save} 
             disabled={saving}
@@ -265,40 +272,49 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           </thead>
           <tbody>
             {bookings.map(b => (
-              <tr key={b.id}>
+              <tr key={b.id} className="border-b">
                 <td className="px-6 py-4">
-                  {b.items.map((bi, i) => {
-                    const it = items.find(item => item.id === bi.itemId);
-                    return (
-                      <div key={i} className="flex items-center gap-2 mb-1">
-                        {it && <ItemIcon item={it} />}
-                        <span className="text-sm">{it?.name} <span className="text-gray-500">x{bi.quantity}</span></span>
+                  <div className="space-y-1">
+                    {b.items.map(item => (
+                      <div key={item.id} className="text-sm">
+                        {item.name} x {item.quantity}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </td>
-                <td className="px-6 py-4">{projects.find(p => p.id === b.projectId)?.name}</td>
-                <td className="px-6 py-4">{formatDate(b.startDate)}</td>
-                <td className="px-6 py-4">{formatDate(b.endDate)}</td>
                 <td className="px-6 py-4">
-                  <button 
-                    onClick={() => { 
-                      setEdit(b.id); 
-                      setBis(b.items); 
-                      setPid(b.projectId); 
-                      setStart(b.startDate); 
-                      setEnd(b.endDate); 
-                    }} 
-                    className="text-blue-600 mr-3"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(b.id)} 
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {projects.find(p => p.id === b.project_id)?.name}
+                </td>
+                <td className="px-6 py-4">
+                  {new Date(b.start_date).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4">
+                  {new Date(b.end_date).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setPid(b.project_id);
+                        setStart(b.start_date);
+                        setEnd(b.end_date);
+                        setBis(b.items.map(item => ({
+                          itemId: item.id,
+                          quantity: item.quantity
+                        })));
+                        setEdit(b.id);
+                      }}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(b.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -308,3 +324,5 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     </div>
   );
 };
+
+export default BookingForm;
