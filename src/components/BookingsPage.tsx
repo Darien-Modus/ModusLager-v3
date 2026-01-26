@@ -20,31 +20,13 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const save = async () => {
-    if (saving) return;
-    
+  const saveBooking = async () => {
+    if (!pid || !start || !end) {
+      setErr('Please fill all required fields');
+      return;
+    }
+
     setSaving(true);
-    setErr('');
-
-    // Validation
-    if (!pid) {
-      setErr('Please select a project');
-      setSaving(false);
-      return;
-    }
-
-    if (!start || !end) {
-      setErr('Please select start and end dates');
-      setSaving(false);
-      return;
-    }
-
-    if (bis.some(bi => !bi.itemId || bi.quantity <= 0)) {
-      setErr('Please select items and quantities');
-      setSaving(false);
-      return;
-    }
-
     try {
       if (edit) {
         // Update existing booking
@@ -58,60 +40,20 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           .eq('id', edit);
 
         if (error) throw error;
-
-        // Delete existing booking items
-        await supabase
-          .from('booking_items')
-          .delete()
-          .eq('booking_id', edit);
-
-        // Insert new booking items
-        const bookingItems = bis.map(bi => ({
-          booking_id: edit,
-          item_id: bi.itemId,
-          quantity: bi.quantity
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('booking_items')
-          .insert(bookingItems);
-
-        if (itemsError) throw itemsError;
       } else {
         // Create new booking
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('bookings')
-          .insert([
-            {
-              project_id: pid,
-              start_date: start,
-              end_date: end
-            }
-          ])
-          .select();
+          .insert({
+            project_id: pid,
+            start_date: start,
+            end_date: end
+          });
 
         if (error) throw error;
-        if (!data || data.length === 0) throw new Error('No data returned');
-
-        const newBookingId = data[0].id;
-
-        // Insert booking items
-        const bookingItems = bis.map(bi => ({
-          booking_id: newBookingId,
-          item_id: bi.itemId,
-          quantity: bi.quantity
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('booking_items')
-          .insert(bookingItems);
-
-        if (itemsError) throw itemsError;
       }
 
-      // Refresh data
       await refreshData();
-      // Reset form
       setBis([{ itemId: '', quantity: 0 }]);
       setPid('');
       setStart('');
@@ -148,10 +90,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     setPid(booking.project_id);
     setStart(booking.start_date);
     setEnd(booking.end_date);
-    
-    // You'll need to populate bis with booking items
-    // This is a simplified version - you'll need to implement properly
-    setBis([{ itemId: '', quantity: 0 }]);
     setEdit(booking.id);
   };
 
@@ -284,7 +222,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         <div className="form-actions">
           <button 
             type="button" 
-            onClick={save}
+            onClick={saveBooking}
             disabled={saving}
             className="save-btn"
           >
