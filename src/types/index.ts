@@ -3,6 +3,15 @@ export interface Item {
   name: string;
   totalQuantity: number;
   color?: string;
+  image?: string;
+  groupId?: string | null;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  color?: string;
+  sortOrder?: number;
 }
 
 export interface Project {

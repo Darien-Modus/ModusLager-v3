@@ -6,20 +6,13 @@ interface ItemIconProps {
 }
 
 export const ItemIcon: React.FC<ItemIconProps> = ({ item }) => {
-  const isRainbow = item.color && !item.color.startsWith('#');
-  
-  if (isRainbow) {
-    return (
-      <div 
-        className="w-8 h-8 rounded-full" 
-        style={{ background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }}
-      />
-    );
+  if (item.image) {
+    return <img src={item.image} alt={item.name} className="w-6 h-6 rounded object-cover" />;
   }
   
   return (
     <div 
-      className="w-8 h-8 rounded-full" 
+      className="w-6 h-6 rounded" 
       style={{ backgroundColor: item.color || '#9CA3AF' }} 
     />
   );

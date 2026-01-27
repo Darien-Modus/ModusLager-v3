@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Package, BookOpen, BarChart3, LogOut } from 'lucide-react';
-import { Item, Project, Booking } from './types';
+import { Item, Project, Booking, Group } from './types';
 import { supabase } from './utils/supabase';
 import { ItemsPage } from './components/ItemsPage';
 import { ProjectsPage } from './components/ProjectsPage';
@@ -13,6 +13,7 @@ export default function App() {
   const [items, setItems] = useState<Item[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [auth, setAuth] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +21,14 @@ export default function App() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      
+      // Fetch groups
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('groups')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      
+      if (groupsError) throw groupsError;
       
       // Fetch items
       const { data: itemsData, error: itemsError } = await supabase
@@ -52,11 +61,20 @@ export default function App() {
       if (bookingsError) throw bookingsError;
       
       // Transform data to match app format
+      const transformedGroups: Group[] = groupsData?.map(group => ({
+        id: group.id,
+        name: group.name,
+        color: group.color,
+        sortOrder: group.sort_order
+      })) || [];
+      
       const transformedItems: Item[] = itemsData?.map(item => ({
         id: item.id,
         name: item.name,
         totalQuantity: item.total_quantity,
-        color: item.color
+        color: item.color,
+        image: item.image,
+        groupId: item.group_id
       })) || [];
       
       const transformedProjects: Project[] = projectsData?.map(project => ({
@@ -77,6 +95,7 @@ export default function App() {
         endDate: booking.end_date
       })) || [];
       
+      setGroups(transformedGroups);
       setItems(transformedItems);
       setProjects(transformedProjects);
       setBookings(transformedBookings);
@@ -133,9 +152,9 @@ export default function App() {
         </div>
       </nav>
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {page === 'items' && <ItemsPage items={items} setItems={setItems} bookings={bookings} refreshData={fetchData} />}
-        {page === 'projects' && <ProjectsPage projects={projects} setProjects={setProjects} refreshData={fetchData} />}
-        {page === 'bookings' && <BookingsPage bookings={bookings} setBookings={setBookings} items={items} projects={projects} refreshData={fetchData} />}
+        {page === 'items' && <ItemsPage items={items} bookings={bookings} groups={groups} refreshData={fetchData} />}
+        {page === 'projects' && <ProjectsPage projects={projects} refreshData={fetchData} />}
+        {page === 'bookings' && <BookingsPage bookings={bookings} items={items} projects={projects} groups={groups} refreshData={fetchData} />}
         {page === 'overview' && <OverviewPage items={items} bookings={bookings} />}
         {page === 'calendar' && <CalendarPage bookings={bookings} items={items} projects={projects} />}
       </main>
