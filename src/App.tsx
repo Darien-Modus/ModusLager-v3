@@ -17,7 +17,6 @@ export default function App() {
   const [auth, setAuth] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all data from Supabase
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -60,7 +59,7 @@ export default function App() {
       
       if (bookingsError) throw bookingsError;
       
-      // Transform data to match app format
+      // Transform groups
       const transformedGroups: Group[] = groupsData?.map(group => ({
         id: group.id,
         name: group.name,
@@ -68,6 +67,7 @@ export default function App() {
         sortOrder: group.sort_order
       })) || [];
       
+      // Transform items
       const transformedItems: Item[] = itemsData?.map(item => ({
         id: item.id,
         name: item.name,
@@ -77,6 +77,7 @@ export default function App() {
         groupId: item.group_id
       })) || [];
       
+      // Transform projects
       const transformedProjects: Project[] = projectsData?.map(project => ({
         id: project.id,
         name: project.name,
@@ -84,6 +85,7 @@ export default function App() {
         client: project.client
       })) || [];
       
+      // Transform bookings
       const transformedBookings: Booking[] = bookingsData?.map(booking => ({
         id: booking.id,
         items: booking.booking_items.map((bi: any) => ({
@@ -116,10 +118,18 @@ export default function App() {
   if (!auth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-          <Package className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-center mb-6">Inventory Booking</h1>
-          <button onClick={() => setAuth(true)} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Login</button>
+        <div className="bg-white p-6 w-full max-w-md">
+          <Package className="w-12 h-12 mx-auto mb-4" style={{ color: '#1F1F1F' }} />
+          <h1 className="text-2xl font-bold text-center mb-4" style={{ fontFamily: 'Raleway, sans-serif', color: '#1F1F1F' }}>
+            Inventory Booking
+          </h1>
+          <button 
+            onClick={() => setAuth(true)} 
+            className="w-full py-2 text-sm"
+            style={{ backgroundColor: '#FFED00', color: '#1F1F1F', fontFamily: 'Raleway, sans-serif' }}
+          >
+            Login
+          </button>
         </div>
       </div>
     );
@@ -127,36 +137,95 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading inventory...</p>
+          <div className="inline-block animate-spin w-10 h-10 border-b-2" style={{ borderColor: '#FFED00' }} />
+          <p className="mt-3 text-xs" style={{ fontFamily: 'Raleway, sans-serif', color: '#575F60' }}>Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600">Inventory Booking</h1>
-          <div className="flex gap-4">
-            <button onClick={() => setPage('overview')} className={`px-4 py-2 rounded ${page === 'overview' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}><BarChart3 className="w-5 h-5" /></button>
-            <button onClick={() => setPage('items')} className={`px-4 py-2 rounded ${page === 'items' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}><Package className="w-5 h-5" /></button>
-            <button onClick={() => setPage('projects')} className={`px-4 py-2 rounded ${page === 'projects' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}><BookOpen className="w-5 h-5" /></button>
-            <button onClick={() => setPage('bookings')} className={`px-4 py-2 rounded ${page === 'bookings' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}>Bookings</button>
-            <button onClick={() => setPage('calendar')} className={`px-4 py-2 rounded ${page === 'calendar' ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'}`}><Calendar className="w-5 h-5" /></button>
-            <button onClick={() => setAuth(false)} className="hover:text-red-600"><LogOut className="w-5 h-5" /></button>
+    <div className="min-h-screen" style={{ backgroundColor: '#F5F5F5', fontFamily: 'Raleway, sans-serif' }}>
+      {/* Header */}
+      <nav className="border-b" style={{ backgroundColor: 'white', borderColor: '#575F60' }}>
+        <div className="max-w-7xl mx-auto px-3 py-2 flex justify-between items-center">
+          <h1 className="text-base font-bold" style={{ color: '#1F1F1F' }}>Inventory Booking</h1>
+          <div className="flex gap-1">
+            <button 
+              onClick={() => setPage('overview')} 
+              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'overview' ? '' : 'border'}`}
+              style={{ 
+                backgroundColor: page === 'overview' ? '#FFED00' : 'white',
+                color: page === 'overview' ? '#1F1F1F' : '#575F60',
+                borderColor: '#575F60'
+              }}
+            >
+              <BarChart3 className="w-3 h-3" /> Overview
+            </button>
+            <button 
+              onClick={() => setPage('items')} 
+              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'items' ? '' : 'border'}`}
+              style={{ 
+                backgroundColor: page === 'items' ? '#FFED00' : 'white',
+                color: page === 'items' ? '#1F1F1F' : '#575F60',
+                borderColor: '#575F60'
+              }}
+            >
+              <Package className="w-3 h-3" /> Items
+            </button>
+            <button 
+              onClick={() => setPage('projects')} 
+              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'projects' ? '' : 'border'}`}
+              style={{ 
+                backgroundColor: page === 'projects' ? '#FFED00' : 'white',
+                color: page === 'projects' ? '#1F1F1F' : '#575F60',
+                borderColor: '#575F60'
+              }}
+            >
+              <BookOpen className="w-3 h-3" /> Projects
+            </button>
+            <button 
+              onClick={() => setPage('bookings')} 
+              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'bookings' ? '' : 'border'}`}
+              style={{ 
+                backgroundColor: page === 'bookings' ? '#FFED00' : 'white',
+                color: page === 'bookings' ? '#1F1F1F' : '#575F60',
+                borderColor: '#575F60'
+              }}
+            >
+              Bookings
+            </button>
+            <button 
+              onClick={() => setPage('calendar')} 
+              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'calendar' ? '' : 'border'}`}
+              style={{ 
+                backgroundColor: page === 'calendar' ? '#FFED00' : 'white',
+                color: page === 'calendar' ? '#1F1F1F' : '#575F60',
+                borderColor: '#575F60'
+              }}
+            >
+              <Calendar className="w-3 h-3" /> Calendar
+            </button>
+            <button 
+              onClick={() => setAuth(false)} 
+              className="px-2 py-1 text-xs flex items-center gap-1 border"
+              style={{ color: '#dc2626', borderColor: '#575F60' }}
+            >
+              <LogOut className="w-3 h-3" /> Logout
+            </button>
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-3 py-4">
         {page === 'items' && <ItemsPage items={items} bookings={bookings} groups={groups} refreshData={fetchData} />}
-        {page === 'projects' && <ProjectsPage projects={projects} refreshData={fetchData} />}
+        {page === 'projects' && <ProjectsPage projects={projects} bookings={bookings} items={items} refreshData={fetchData} />}
         {page === 'bookings' && <BookingsPage bookings={bookings} items={items} projects={projects} groups={groups} refreshData={fetchData} />}
-        {page === 'overview' && <OverviewPage items={items} bookings={bookings} />}
-        {page === 'calendar' && <CalendarPage bookings={bookings} items={items} projects={projects} />}
+        {page === 'overview' && <OverviewPage items={items} bookings={bookings} groups={groups} />}
+        {page === 'calendar' && <CalendarPage bookings={bookings} items={items} projects={projects} groups={groups} />}
       </main>
     </div>
   );

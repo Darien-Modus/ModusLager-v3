@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,12 +8,48 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove ALL rounded corners - make everything sharp */
+* {
+  border-radius: 0 !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F5F5F5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #575F60;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1F1F1F;
+}
+
+/* Remove default button/input styling */
+button, input, select, textarea {
+  border-radius: 0 !important;
+}
+
+img.sharp {
+  border-radius: 0 !important;
+}
+
+/* Custom utilities */
+.brand-yellow {
+  background-color: #FFED00;
+  color: #1F1F1F;
 }
