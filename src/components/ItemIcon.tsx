@@ -1,31 +1,37 @@
-import React from 'react';
 import { Item } from '../types';
 
 interface ItemIconProps {
   item: Item;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md';
 }
 
 export const ItemIcon: React.FC<ItemIconProps> = ({ item, size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6'
-  };
-
+  const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-8 h-8';
+  
+  const isRainbow = item.color && !item.color.startsWith('#');
+  
   if (item.image) {
     return (
       <img 
         src={item.image} 
         alt={item.name} 
-        className={`${sizeClasses[size]} object-cover sharp`}
+        className={`${sizeClass} rounded-full object-cover`} 
+      />
+    );
+  }
+  
+  if (isRainbow) {
+    return (
+      <div 
+        className={`${sizeClass} rounded-full`}
+        style={{ background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }}
       />
     );
   }
   
   return (
     <div 
-      className={`${sizeClasses[size]} sharp`}
+      className={`${sizeClass} rounded-full`}
       style={{ backgroundColor: item.color || '#9CA3AF' }} 
     />
   );
