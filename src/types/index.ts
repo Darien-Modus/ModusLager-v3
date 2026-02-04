@@ -4,6 +4,7 @@ export interface Item {
   totalQuantity: number;
   color?: string;
   groupId?: string;
+  image?: string;
 }
 
 export interface Group {
