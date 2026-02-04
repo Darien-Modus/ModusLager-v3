@@ -74,7 +74,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
         <h2 className="text-base font-semibold" style={{ color: '#1F1F1F' }}>Calendar</h2>
         <button 
           onClick={onNavigateToBookings}
-          className="flex items-center gap-1 px-2 py-1 text-xs"
+          className="flex items-center gap-1 px-2 py-1 rounded text-xs border"
           style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
         >
           <Plus className="w-3 h-3" /> Add Booking
