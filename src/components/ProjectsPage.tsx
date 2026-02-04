@@ -173,8 +173,8 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
           <button 
             onClick={save} 
             disabled={saving}
-            className="px-2 py-1 text-xs"
-            style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+            className="px-2 py-1 text-xs border"
+            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
           >
             {saving ? 'Saving...' : edit ? 'Update' : 'Add Project'}
           </button>

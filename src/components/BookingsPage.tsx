@@ -14,6 +14,9 @@ interface BookingsPageProps {
 }
 
 export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, groups, refreshData }) => {
+  // Auto-select BeMatrix Frames as default
+  const beMatrixGroup = groups.find(g => g.name === 'BeMatrix Frames');
+  
   const [bis, setBis] = useState<BookingItem[]>([{ itemId: '', quantity: 0 }]);
   const [pid, setPid] = useState('');
   const [start, setStart] = useState('');
@@ -22,7 +25,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(beMatrixGroup ? [beMatrixGroup.id] : []);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectForm, setProjectForm] = useState({ name: '', number: '', client: '' });
   const [projectSearch, setProjectSearch] = useState('');
@@ -206,11 +209,11 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
 
   return (
     <div style={{ fontFamily: 'Raleway, sans-serif' }}>
-      <h2 className="text-2xl font-bold mb-6" style={{ color: '#1F1F1F' }}>Bookings</h2>
+      <h2 className="text-xl font-bold mb-4" style={{ color: '#1F1F1F' }}>Bookings</h2>
       
       <div className="p-4 border rounded mb-6" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Project</label>
               <div className="space-y-2">
@@ -298,8 +301,8 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                 <div className="flex gap-1">
                   <button
                     onClick={saveProject}
-                    className="flex-1 px-2 py-1 rounded text-xs"
-                    style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+                    className="flex-1 px-2 py-1 rounded text-xs border"
+                    style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
                   >
                     Add
                   </button>
@@ -321,8 +324,8 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
               <button 
                 onClick={() => setBis([...bis, { itemId: '', quantity: 0 }])} 
                 disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 rounded text-xs"
-                style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs border"
+                style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
               >
                 <Plus className="w-3 h-3" /> Add Item
               </button>
@@ -342,7 +345,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   </button>
                 </div>
                 
-                {/* Search and Filters */}
+                {/* Search and Group Filters */}
                 <div className="mb-2 space-y-2">
                   <div className="relative">
                     <Search className="absolute left-2 top-2 w-3 h-3" style={{ color: '#575F60' }} />
@@ -357,7 +360,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   </div>
                   
                   <div className="flex flex-wrap gap-1">
-                    <span className="text-xs" style={{ color: '#575F60' }}>Groups:</span>
+                    <span className="text-xs" style={{ color: '#575F60' }}>Filter:</span>
                     {[{ id: 'ungrouped', name: 'Ungrouped' }, ...groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000')].map(g => (
                       <button
                         key={g.id}
@@ -365,7 +368,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                         className="px-2 py-0.5 rounded text-xs border"
                         style={{
                           backgroundColor: selectedGroups.includes(g.id) ? '#FFED00' : 'transparent',
-                          borderColor: '#575F60',
+                          borderColor: selectedGroups.includes(g.id) ? '#1F1F1F' : '#575F60',
                           color: '#1F1F1F'
                         }}
                       >
@@ -384,7 +387,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   </div>
                 </div>
 
-                {/* Item Selection */}
+                {/* Item Selection - Clean button list */}
                 <div className="flex flex-wrap gap-1 mb-2">
                   {filteredItems.map(it => (
                     <button
@@ -399,13 +402,13 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                         color: '#1F1F1F'
                       }}
                     >
-                      <ItemIcon item={it} />
+                      <ItemIcon item={it} size="sm" />
                       <span>{it.name}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Quantity */}
+                {/* Quantity Input */}
                 <input 
                   type="number" 
                   placeholder="Quantity" 
@@ -423,14 +426,15 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           <button 
             onClick={save} 
             disabled={saving}
-            className="px-4 py-2 rounded text-sm"
-            style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+            className="px-4 py-2 rounded text-sm border"
+            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
           >
             {saving ? 'Saving...' : edit ? 'Update' : 'Create'}
           </button>
         </div>
       </div>
       
+      {/* Bookings Table */}
       <div className="border rounded" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
         <table className="w-full">
           <thead style={{ backgroundColor: 'rgba(87, 95, 96, 0.1)' }}>
@@ -450,7 +454,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                     const it = items.find(item => item.id === bi.itemId);
                     return (
                       <div key={i} className="flex items-center gap-1 mb-1">
-                        {it && <ItemIcon item={it} />}
+                        {it && <ItemIcon item={it} size="sm" />}
                         <span className="text-xs" style={{ color: '#1F1F1F' }}>{it?.name} <span style={{ color: '#575F60' }}>x{bi.quantity}</span></span>
                       </div>
                     );

@@ -217,6 +217,20 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
             />
           </div>
           <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Group</label>
+            <select
+              value={form.groupId}
+              onChange={e => setForm({ ...form, groupId: e.target.value })}
+              className="w-full px-2 py-1 border text-xs"
+              style={{ borderColor: '#575F60' }}
+            >
+              <option value="">Ungrouped</option>
+              {groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000').map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Color</label>
             <div className="flex gap-1">
               {colorOptions.map(opt => (
@@ -242,25 +256,11 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
               ))}
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Group</label>
-            <select
-              value={form.groupId}
-              onChange={e => setForm({ ...form, groupId: e.target.value })}
-              className="w-full px-2 py-1 border text-xs"
-              style={{ borderColor: '#575F60' }}
-            >
-              <option value="">Ungrouped</option>
-              {groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000').map(g => (
-                <option key={g.id} value={g.id}>{g.name}</option>
-              ))}
-            </select>
-          </div>
           <button 
             onClick={saveItem} 
             disabled={saving}
-            className="px-2 py-1 text-xs mt-5"
-            style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+            className="px-2 py-1 text-xs mt-5 border"
+            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
           >
             {saving ? 'Saving...' : edit ? 'Update' : <><Plus className="w-3 h-3 inline" /> Add</>}
           </button>

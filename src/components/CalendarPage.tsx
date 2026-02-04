@@ -219,13 +219,24 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
                     </div>
                     {bs.map(b => {
                       const proj = projects.find(p => p.id === b.projectId);
+                      // Find BeMatrix Frames group
+                      const beMatrixGroup = groups.find(g => g.name === 'BeMatrix Frames');
+                      // Filter items to only show BeMatrix Frames items
+                      const beMatrixItems = b.items.filter(bi => {
+                        const item = items.find(i => i.id === bi.itemId);
+                        return item && item.groupId === beMatrixGroup?.id;
+                      });
+                      
+                      // Only show booking if it has BeMatrix Frames items
+                      if (beMatrixItems.length === 0) return null;
+                      
                       return (
                         <div key={b.id} className="mb-2 pb-2 border-b last:border-b-0" style={{ borderColor: '#e5e7eb' }}>
                           <div className="font-medium text-xs mb-1" style={{ color: '#1F1F1F' }}>
                             {proj?.name}
                           </div>
                           <div className="space-y-1">
-                            {b.items.map((bi, idx) => {
+                            {beMatrixItems.map((bi, idx) => {
                               const it = items.find(item => item.id === bi.itemId);
                               return (
                                 <div key={idx} className="flex items-center gap-1 text-xs">

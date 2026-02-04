@@ -1,4 +1,0 @@
-1. OVERVIEW PAGE
-The items are not grouped here still. The cards are too long, they can be 50-30% shorter. The colour of the item can be displayed as a vertical rectangle/strip on the left-hand side od the card.
-
-2. 

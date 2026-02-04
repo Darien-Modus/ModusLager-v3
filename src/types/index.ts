@@ -3,8 +3,7 @@ export interface Item {
   name: string;
   totalQuantity: number;
   color?: string;
-  image?: string;
-  groupId?: string | null;
+  groupId?: string;
 }
 
 export interface Group {

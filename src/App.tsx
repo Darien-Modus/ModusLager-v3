@@ -17,17 +17,10 @@ export default function App() {
   const [auth, setAuth] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Fetch all data from Supabase
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch groups
-      const { data: groupsData, error: groupsError } = await supabase
-        .from('groups')
-        .select('*')
-        .order('sort_order', { ascending: true });
-      
-      if (groupsError) throw groupsError;
       
       // Fetch items
       const { data: itemsData, error: itemsError } = await supabase
@@ -45,6 +38,14 @@ export default function App() {
       
       if (projectsError) throw projectsError;
       
+      // Fetch groups
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('groups')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      
+      if (groupsError) throw groupsError;
+      
       // Fetch bookings with booking_items
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
@@ -59,25 +60,15 @@ export default function App() {
       
       if (bookingsError) throw bookingsError;
       
-      // Transform groups
-      const transformedGroups: Group[] = groupsData?.map(group => ({
-        id: group.id,
-        name: group.name,
-        color: group.color,
-        sortOrder: group.sort_order
-      })) || [];
-      
-      // Transform items
+      // Transform data to match app format
       const transformedItems: Item[] = itemsData?.map(item => ({
         id: item.id,
         name: item.name,
         totalQuantity: item.total_quantity,
         color: item.color,
-        image: item.image,
         groupId: item.group_id
       })) || [];
       
-      // Transform projects
       const transformedProjects: Project[] = projectsData?.map(project => ({
         id: project.id,
         name: project.name,
@@ -85,7 +76,13 @@ export default function App() {
         client: project.client
       })) || [];
       
-      // Transform bookings
+      const transformedGroups: Group[] = groupsData?.map(group => ({
+        id: group.id,
+        name: group.name,
+        color: group.color,
+        sortOrder: group.sort_order
+      })) || [];
+      
       const transformedBookings: Booking[] = bookingsData?.map(booking => ({
         id: booking.id,
         items: booking.booking_items.map((bi: any) => ({
@@ -97,9 +94,9 @@ export default function App() {
         endDate: booking.end_date
       })) || [];
       
-      setGroups(transformedGroups);
       setItems(transformedItems);
       setProjects(transformedProjects);
+      setGroups(transformedGroups);
       setBookings(transformedBookings);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -117,16 +114,31 @@ export default function App() {
 
   if (!auth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
-        <div className="bg-white p-6 w-full max-w-md">
-          <Package className="w-12 h-12 mx-auto mb-4" style={{ color: '#1F1F1F' }} />
-          <h1 className="text-2xl font-bold text-center mb-4" style={{ fontFamily: 'Raleway, sans-serif', color: '#1F1F1F' }}>
+      <div 
+        className="min-h-screen flex items-center justify-center p-4"
+        style={{ 
+          fontFamily: 'Raleway, sans-serif',
+          backgroundColor: '#F5F5F5'
+        }}
+      >
+        <div 
+          className="rounded-lg p-8 w-full max-w-md border"
+          style={{ 
+            backgroundColor: 'white',
+            borderColor: '#575F60'
+          }}
+        >
+          <Package className="w-16 h-16 mx-auto mb-4" style={{ color: '#FFED00' }} />
+          <h1 className="text-3xl font-bold text-center mb-6" style={{ color: '#1F1F1F' }}>
             Inventory Booking
           </h1>
           <button 
             onClick={() => setAuth(true)} 
-            className="w-full py-2 text-sm"
-            style={{ backgroundColor: '#FFED00', color: '#1F1F1F', fontFamily: 'Raleway, sans-serif' }}
+            className="w-full py-2 rounded-lg text-base font-medium"
+            style={{ 
+              backgroundColor: '#FFED00',
+              color: '#1F1F1F'
+            }}
           >
             Login
           </button>
@@ -137,95 +149,118 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5' }}>
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ 
+          fontFamily: 'Raleway, sans-serif',
+          backgroundColor: '#F5F5F5'
+        }}
+      >
         <div className="text-center">
-          <div className="inline-block animate-spin w-10 h-10 border-b-2" style={{ borderColor: '#FFED00' }} />
-          <p className="mt-3 text-xs" style={{ fontFamily: 'Raleway, sans-serif', color: '#575F60' }}>Loading...</p>
+          <div 
+            className="inline-block animate-spin rounded-full h-12 w-12 border-b-2"
+            style={{ borderColor: '#FFED00' }}
+          />
+          <p className="mt-4" style={{ color: '#575F60' }}>Loading inventory...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F5F5F5', fontFamily: 'Raleway, sans-serif' }}>
-      {/* Header */}
-      <nav className="border-b" style={{ backgroundColor: 'white', borderColor: '#575F60' }}>
-        <div className="max-w-7xl mx-auto px-3 py-2 flex justify-between items-center">
-          <h1 className="text-base font-bold" style={{ color: '#1F1F1F' }}>Inventory Booking</h1>
-          <div className="flex gap-1">
+    <div 
+      className="min-h-screen"
+      style={{ 
+        fontFamily: 'Raleway, sans-serif',
+        backgroundColor: '#F5F5F5'
+      }}
+    >
+      <nav 
+        className="border-b"
+        style={{ 
+          backgroundColor: 'white',
+          borderColor: '#575F60'
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+          <h1 className="text-xl font-bold" style={{ color: '#1F1F1F' }}>
+            Inventory Booking
+          </h1>
+          <div className="flex gap-2">
             <button 
               onClick={() => setPage('overview')} 
-              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'overview' ? '' : 'border'}`}
-              style={{ 
-                backgroundColor: page === 'overview' ? '#FFED00' : 'white',
-                color: page === 'overview' ? '#1F1F1F' : '#575F60',
-                borderColor: '#575F60'
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border`}
+              style={{
+                backgroundColor: page === 'overview' ? '#FFED00' : 'transparent',
+                borderColor: '#575F60',
+                color: '#1F1F1F'
               }}
             >
-              <BarChart3 className="w-3 h-3" /> Overview
+              <BarChart3 className="w-4 h-4" /> Overview
             </button>
             <button 
               onClick={() => setPage('items')} 
-              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'items' ? '' : 'border'}`}
-              style={{ 
-                backgroundColor: page === 'items' ? '#FFED00' : 'white',
-                color: page === 'items' ? '#1F1F1F' : '#575F60',
-                borderColor: '#575F60'
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border`}
+              style={{
+                backgroundColor: page === 'items' ? '#FFED00' : 'transparent',
+                borderColor: '#575F60',
+                color: '#1F1F1F'
               }}
             >
-              <Package className="w-3 h-3" /> Items
+              <Package className="w-4 h-4" /> Items
             </button>
             <button 
               onClick={() => setPage('projects')} 
-              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'projects' ? '' : 'border'}`}
-              style={{ 
-                backgroundColor: page === 'projects' ? '#FFED00' : 'white',
-                color: page === 'projects' ? '#1F1F1F' : '#575F60',
-                borderColor: '#575F60'
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border`}
+              style={{
+                backgroundColor: page === 'projects' ? '#FFED00' : 'transparent',
+                borderColor: '#575F60',
+                color: '#1F1F1F'
               }}
             >
-              <BookOpen className="w-3 h-3" /> Projects
+              <BookOpen className="w-4 h-4" /> Projects
             </button>
             <button 
               onClick={() => setPage('bookings')} 
-              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'bookings' ? '' : 'border'}`}
-              style={{ 
-                backgroundColor: page === 'bookings' ? '#FFED00' : 'white',
-                color: page === 'bookings' ? '#1F1F1F' : '#575F60',
-                borderColor: '#575F60'
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border`}
+              style={{
+                backgroundColor: page === 'bookings' ? '#FFED00' : 'transparent',
+                borderColor: '#575F60',
+                color: '#1F1F1F'
               }}
             >
               Bookings
             </button>
             <button 
               onClick={() => setPage('calendar')} 
-              className={`px-2 py-1 text-xs flex items-center gap-1 ${page === 'calendar' ? '' : 'border'}`}
-              style={{ 
-                backgroundColor: page === 'calendar' ? '#FFED00' : 'white',
-                color: page === 'calendar' ? '#1F1F1F' : '#575F60',
-                borderColor: '#575F60'
+              className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 border`}
+              style={{
+                backgroundColor: page === 'calendar' ? '#FFED00' : 'transparent',
+                borderColor: '#575F60',
+                color: '#1F1F1F'
               }}
             >
-              <Calendar className="w-3 h-3" /> Calendar
+              <Calendar className="w-4 h-4" /> Calendar
             </button>
             <button 
               onClick={() => setAuth(false)} 
-              className="px-2 py-1 text-xs flex items-center gap-1 border"
-              style={{ color: '#dc2626', borderColor: '#575F60' }}
+              className="px-3 py-1.5 rounded text-sm border"
+              style={{
+                borderColor: '#575F60',
+                color: '#dc2626'
+              }}
             >
-              <LogOut className="w-3 h-3" /> Logout
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </nav>
-      
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 py-4">
+      <main className="max-w-7xl mx-auto px-4 py-6">
         {page === 'items' && <ItemsPage items={items} bookings={bookings} groups={groups} refreshData={fetchData} />}
         {page === 'projects' && <ProjectsPage projects={projects} bookings={bookings} items={items} refreshData={fetchData} />}
         {page === 'bookings' && <BookingsPage bookings={bookings} items={items} projects={projects} groups={groups} refreshData={fetchData} />}
         {page === 'overview' && <OverviewPage items={items} bookings={bookings} groups={groups} />}
-        {page === 'calendar' && <CalendarPage bookings={bookings} items={items} projects={projects} groups={groups} />}
+        {page === 'calendar' && <CalendarPage bookings={bookings} items={items} projects={projects} groups={groups} onNavigateToBookings={() => setPage('bookings')} />}
       </main>
     </div>
   );
