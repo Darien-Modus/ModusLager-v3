@@ -15,7 +15,6 @@ interface BookingsPageProps {
 
 export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, groups, refreshData }) => { 
   const beMatrixGroup = groups.find(g => g.name === 'BeMatrix Frames'); 
-   
   const [bis, setBis] = useState<BookingItem[]>([{ itemId: '', quantity: 0 }]); 
   const [pid, setPid] = useState(''); 
   const [start, setStart] = useState(''); 
@@ -24,9 +23,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [err, setErr] = useState(''); 
   const [saving, setSaving] = useState(false); 
   const [searchTerm, setSearchTerm] = useState(''); 
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(beMatrixGroup ? [beMatrixGroup.id] : []); 
-  const [showProjectForm, setShowProjectForm] = useState(false); 
-  const [projectForm, setProjectForm] = useState({ name: '', number: '', client: '' }); 
   const [projectSearch, setProjectSearch] = useState(''); 
 
   const filteredProjects = projects.filter(p =>  
@@ -60,6 +56,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       } else { 
         const { data, error } = await supabase.from('bookings').insert([bData]).select().single(); 
         if (error) throw error;
+        if (!data) throw new Error("Booking saved, but no ID returned from DB.");
         bId = data.id;
       } 
 
@@ -67,12 +64,22 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         const { error: itemErr } = await supabase.from('booking_items').insert(
           validItems.map(bi => ({ booking_id: bId, item_id: bi.itemId, quantity: bi.quantity }))
         );
-        if (itemErr) throw new Error(`Booking saved, but items failed: ${itemErr.message}`);
+        if (itemErr) throw new Error(`Items failed: ${itemErr.message}`);
       }
       
       await refreshData(); 
       setBis([{ itemId: '', quantity: 0 }]); setPid(''); setStart(''); setEnd(''); setEdit(null); setProjectSearch('');
     } catch (e: any) { setErr(e.message); } finally { setSaving(false); } 
+  }; 
+
+  const handleDelete = async (id: string) => { 
+    if (confirm('Are you sure you want to delete this booking?')) { 
+      try {
+        await supabase.from('booking_items').delete().eq('booking_id', id);
+        await supabase.from('bookings').delete().eq('id', id); 
+        refreshData(); 
+      } catch (e: any) { alert(e.message); }
+    }
   };
   return ( 
     <div style={{ fontFamily: "Raleway, sans-serif" }}> 
@@ -111,7 +118,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
             ))} 
           </div> 
           {err && <p className="text-red-500 text-sm mb-4 font-bold">{err}</p>}
-          <button onClick={save} className="px-6 py-3 text-sm font-medium border bg-[#FFED00] border-[#191A23]">{saving ? 'Saving...' : 'Confirm Booking'}</button> 
+          <button onClick={save} disabled={saving} className="px-6 py-3 text-sm font-medium border bg-[#FFED00] border-[#191A23]">{saving ? 'Saving...' : 'Confirm Booking'}</button> 
         </div> 
       </div> 
        
@@ -121,10 +128,20 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           <tbody> 
             {displayBookings.map(b => ( 
               <tr key={b.id} className="border-t"> 
-                <td className="px-4 py-3 text-sm">{b.items?.map((bi, i) => <div key={i}>{items.find(it => it.id === bi.itemId)?.name} x{bi.quantity}</div>)}</td> 
+                <td className="px-4 py-3 text-sm">
+                  {b.items?.map((bi, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <ItemIcon item={items.find(it => it.id === bi.itemId)!} size="sm" />
+                      {items.find(it => it.id === bi.itemId)?.name} x{bi.quantity}
+                    </div>
+                  ))}
+                </td> 
                 <td className="px-4 py-3 text-sm font-medium">{projects.find(p => p.id === b.projectId)?.name}</td> 
                 <td className="px-4 py-3 text-sm">{formatDate(b.startDate)} - {formatDate(b.endDate)}</td> 
-                <td className="px-4 py-3"><button onClick={() => { setEdit(b.id); setBis(b.items); setPid(b.projectId); setStart(b.startDate); setEnd(b.endDate); }} className="mr-2"><Edit2 size={16}/></button></td> 
+                <td className="px-4 py-3 flex gap-2">
+                  <button onClick={() => { setEdit(b.id); setBis(b.items); setPid(b.projectId); setStart(b.startDate); setEnd(b.endDate); }}><Edit2 size={16}/></button>
+                  <button onClick={() => handleDelete(b.id)} className="text-red-600"><Trash2 size={16}/></button>
+                </td> 
               </tr> 
             ))} 
           </tbody> 
