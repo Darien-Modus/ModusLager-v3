@@ -58,10 +58,14 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     return filtered;
   };
 
-  const filteredProjects = projects.filter(p => {
-  const search = projectSearch.toLowerCase();
-  const name = (p.name || '').toLowerCase();
-  const number = String(p.number || '').toLowerCase();
+  const displayBookings = bookings.filter(b => {
+    const p = projects.find(proj => proj.id === b.projectId);
+    const s = searchTerm.toLowerCase();
+    const name = String(p?.name || '').toLowerCase();
+    const num = String(p?.number || '').toLowerCase();
+    const hasItem = b.items.some(bi => String(items.find(i => i.id === bi.itemId)?.name || '').toLowerCase().includes(s));
+    return name.includes(s) || num.includes(s) || hasItem;
+  });
 
   return name.includes(search) || number.includes(search);
 });
@@ -240,7 +244,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   disabled={saving}
                 >
                   <option value="">Select</option>
-                  {filteredProjects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.number})</option>)}
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.number})</option>)}
                 </select>
                 <button
                   onClick={() => setShowProjectForm(!showProjectForm)}
@@ -439,7 +443,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
             </tr>
           </thead>
           <tbody>
-            {bookings.map(b => (
+            {displayBookings.map(b => (
               <tr key={b.id} className="border-t" style={{ borderColor: '#F3F3F3' }}>
                 <td className="px-4 py-3">
                   {b.items.map((bi, i) => {
