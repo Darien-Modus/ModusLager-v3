@@ -94,22 +94,30 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       let bId = edit;
 
       if (edit) { 
-        await supabase.from('bookings').update(bData).eq('id', edit); 
+        const { error: updErr } = await supabase.from('bookings').update(bData).eq('id', edit); 
+        if (updErr) throw updErr;
         await supabase.from('booking_items').delete().eq('booking_id', edit); 
       } else { 
+        // We do NOT send an ID here, let the database generate it
         const { data, error } = await supabase.from('bookings').insert([bData]).select().single(); 
         if (error) throw error;
-        if (!data) throw new Error("Booking created but could not be read back. Check RLS.");
+        if (!data) throw new Error("No data returned from insert.");
         bId = data.id;
       } 
 
       if (bId) {
-        await supabase.from('booking_items').insert(validItems.map(bi => ({ booking_id: bId, item_id: bi.itemId, quantity: bi.quantity }))); 
+        const { error: itemErr } = await supabase.from('booking_items').insert(
+          validItems.map(bi => ({ booking_id: bId, item_id: bi.itemId, quantity: bi.quantity }))
+        );
+        if (itemErr) throw itemErr;
       }
       
       await refreshData(); 
       setBis([{ itemId: '', quantity: 0 }]); setPid(''); setStart(''); setEnd(''); setEdit(null); setProjectSearch('');
-    } catch (e: any) { setErr(e.message || 'Error saving'); } finally { setSaving(false); } 
+    } catch (e: any) { 
+      setErr(e.message || 'Error saving'); 
+      console.error("Save Error:", e);
+    } finally { setSaving(false); } 
   }; 
 
   const handleDelete = async (id: string) => { 
