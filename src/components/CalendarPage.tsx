@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { Booking, Item, Project, Group } from '../types';
 import { formatDate } from '../utils/helpers';
@@ -16,7 +16,6 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [hover, setHover] = useState<string | null>(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const calendarRef = useRef<HTMLDivElement>(null);
   
   const y = d.getFullYear();
@@ -46,7 +45,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
   };
   
   const getB = (day: number) => {
-    const ds = new Date(y, m, day).toISOString().split('T')[0];
+    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     let filtered = bookings.filter(b => ds >= b.startDate && ds <= b.endDate);
     
     if (selectedGroups.length > 0) {
@@ -67,28 +66,6 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
     }
     
     return filtered;
-  };
-
-  const handleMouseEnter = (dateStr: string, event: React.MouseEvent<HTMLDivElement>) => {
-    setHover(dateStr);
-    
-    if (calendarRef.current) {
-      const rect = calendarRef.current.getBoundingClientRect();
-      const cellRect = event.currentTarget.getBoundingClientRect();
-      
-      // Calculate position relative to calendar
-      const relativeX = cellRect.left - rect.left;
-      const relativeY = cellRect.top - rect.top;
-      
-      // Determine if we're in the right half or left half, top half or bottom half
-      const isRightHalf = relativeX > rect.width / 2;
-      const isBottomHalf = relativeY > rect.height / 2;
-      
-      setTooltipPos({
-        x: isRightHalf ? relativeX - 280 : relativeX + cellRect.width + 10,
-        y: isBottomHalf ? relativeY - 200 : relativeY
-      });
-    }
   };
 
   return (
@@ -122,11 +99,6 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
                 {g.name}
               </button>
             ))}
-            {selectedGroups.length > 0 && (
-              <button onClick={() => setSelectedGroups([])} className="px-3 py-1 text-sm" style={{ color: '#dc2626' }}>
-                Clear
-              </button>
-            )}
           </div>
         </div>
         
@@ -160,41 +132,22 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
                 </button>
               );
             })}
-            {selectedItems.length > 0 && (
-              <button onClick={() => setSelectedItems([])} className="px-3 py-1 text-sm" style={{ color: '#dc2626' }}>
-                Clear
-              </button>
-            )}
           </div>
         </div>
       </div>
       
       <div ref={calendarRef} className="border relative" style={{ backgroundColor: 'white', borderColor: '#191A23' }}>
         <div className="flex justify-between items-center p-4 border-b" style={{ borderColor: '#F3F3F3' }}>
-          <button 
-            onClick={() => setD(new Date(y, m - 1))} 
-            className="px-4 py-2 border text-sm font-medium"
-            style={{ borderColor: '#575F60' }}
-          >
-            Previous
-          </button>
+          <button onClick={() => setD(new Date(y, m - 1))} className="px-4 py-2 border text-sm font-medium" style={{ borderColor: '#575F60' }}>Previous</button>
           <h3 className="text-xl font-medium" style={{ color: '#191A23' }}>
             {d.toLocaleString('default', { month: 'long', year: 'numeric' })}
           </h3>
-          <button 
-            onClick={() => setD(new Date(y, m + 1))} 
-            className="px-4 py-2 border text-sm font-medium"
-            style={{ borderColor: '#575F60' }}
-          >
-            Next
-          </button>
+          <button onClick={() => setD(new Date(y, m + 1))} className="px-4 py-2 border text-sm font-medium" style={{ borderColor: '#575F60' }}>Next</button>
         </div>
         
         <div className="grid grid-cols-7 gap-px" style={{ backgroundColor: '#575F60' }}>
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(x => (
-            <div key={x} className="text-center font-medium py-2 text-sm" style={{ backgroundColor: '#F3F3F3', color: '#191A23' }}>
-              {x}
-            </div>
+            <div key={x} className="text-center font-medium py-2 text-sm" style={{ backgroundColor: '#F3F3F3', color: '#191A23' }}>{x}</div>
           ))}
           
           {Array.from({ length: first }).map((_, i) => (
@@ -204,98 +157,52 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
           {Array.from({ length: days }).map((_, i) => {
             const day = i + 1;
             const bs = getB(day);
-            const dateStr = new Date(y, m, day).toISOString().split('T')[0];
+            const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isFarRight = (first + i) % 7 >= 5;
             
             return (
               <div 
                 key={day} 
-                className="p-2 relative"
+                className="p-2 relative" 
                 style={{ backgroundColor: 'white', minHeight: '120px' }}
-                onMouseEnter={(e) => handleMouseEnter(dateStr, e)}
+                onMouseEnter={() => setHover(dateStr)}
                 onMouseLeave={() => setHover(null)}
               >
-                <div className="font-semibold text-sm mb-1" style={{ color: '#191A23' }}>
-                  {day}
-                </div>
+                <div className="font-semibold text-sm mb-1" style={{ color: '#191A23' }}>{day}</div>
                 
                 {bs.slice(0, 5).map((b, idx) => {
                   const proj = projects.find(p => p.id === b.projectId);
                   return (
-                    <div 
-                      key={b.id} 
-                      className="text-xs px-1 py-0.5 mb-0.5 truncate"
-                      style={{ 
-                        backgroundColor: getBookingShade(idx),
-                        color: '#191A23'
-                      }}
-                    >
+                    <div key={b.id} className="text-xs px-1 py-0.5 mb-0.5 truncate" style={{ backgroundColor: getBookingShade(idx), color: '#191A23' }}>
                       {proj?.name}
                     </div>
                   );
                 })}
-                
-                {bs.length > 5 && (
-                  <div className="text-xs" style={{ color: '#575F60' }}>
-                    +{bs.length - 5} more
+
+                {hover === dateStr && bs.length > 0 && (
+                  <div 
+                    className="absolute z-50 border-2 p-3 w-64 bg-white"
+                    style={{ 
+                      top: '0',
+                      left: isFarRight ? 'auto' : '100%',
+                      right: isFarRight ? '100%' : 'auto',
+                      borderColor: '#FFED00',
+                      boxShadow: '0 10px 15px -3px rgba(0,0,0,0.2)',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <div className="font-bold mb-2 text-xs">{formatDate(dateStr)}</div>
+                    {bs.map(b => (
+                      <div key={b.id} className="mb-2 text-xs border-b last:border-0 pb-1">
+                        {projects.find(p => p.id === b.projectId)?.name}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             );
           })}
         </div>
-        
-        {/* Smart positioned tooltip */}
-        {hover && getB(parseInt(hover.split('-')[2])).length > 0 && (
-          <div 
-            className="absolute z-10 border-2 p-3 w-64"
-            style={{ 
-              backgroundColor: 'white', 
-              borderColor: '#FFED00',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              top: `${tooltipPos.y}px`,
-              left: `${tooltipPos.x}px`
-            }}
-          >
-            <div className="font-semibold mb-2 text-sm" style={{ color: '#191A23' }}>
-              {formatDate(hover)}
-            </div>
-            {getB(parseInt(hover.split('-')[2])).map(b => {
-              const proj = projects.find(p => p.id === b.projectId);
-              return (
-                <div key={b.id} className="mb-3 pb-3 border-b last:border-b-0" style={{ borderColor: '#F3F3F3' }}>
-                  <div className="font-medium text-sm mb-1" style={{ color: '#191A23' }}>
-                    {proj?.name}
-                  </div>
-                  <div className="space-y-1">
-                    {b.items.map((bi, idx) => {
-                      const it = items.find(item => item.id === bi.itemId);
-                      const isRainbow = it?.color && !it.color.startsWith('#');
-                      return (
-                        <div key={idx} className="flex items-center gap-2 text-xs">
-                          {it && (
-                            <div 
-                              className="w-4 h-4 border flex-shrink-0"
-                              style={{ 
-                                borderColor: '#575F60',
-                                ...(isRainbow
-                                  ? { background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }
-                                  : { backgroundColor: it.color || '#9CA3AF' }
-                                )
-                              }}
-                            />
-                          )}
-                          <span style={{ color: '#575F60' }}>
-                            {it?.name} <span className="font-medium">x{bi.quantity}</span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );
