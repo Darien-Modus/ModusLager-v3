@@ -14,7 +14,6 @@ interface BookingsPageProps {
 }
 
 export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, projects, groups, refreshData }) => {
-  // Auto-select BeMatrix Frames as default
   const beMatrixGroup = groups.find(g => g.name === 'BeMatrix Frames');
   
   const [bis, setBis] = useState<BookingItem[]>([{ itemId: '', quantity: 0 }]);
@@ -41,7 +40,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const filterItems = () => {
     let filtered = items;
     
-    // Filter by groups
     if (selectedGroups.length > 0) {
       filtered = filtered.filter(item => {
         if (selectedGroups.includes('ungrouped')) {
@@ -51,7 +49,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       });
     }
     
-    // Filter by search
     if (searchTerm) {
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -208,31 +205,35 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const filteredItems = filterItems();
 
   return (
-    <div style={{ fontFamily: 'Raleway, sans-serif' }}>
-      <h2 className="text-xl font-bold mb-4" style={{ color: '#1F1F1F' }}>Bookings</h2>
+    <div style={{ fontFamily: "Raleway, sans-serif" }}>
+      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Bookings</h2>
       
-      <div className="p-4 border rounded mb-6" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
+      <div className="p-6 border mb-6" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
+        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
+          {edit ? 'Edit Booking' : 'Create New Booking'}
+        </h3>
+        
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Project</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Project</label>
               <div className="space-y-2">
                 <div className="relative">
-                  <Search className="absolute left-2 top-2 w-4 h-4" style={{ color: '#575F60' }} />
+                  <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: '#575F60' }} />
                   <input
                     type="text"
                     placeholder="Search projects..."
                     value={projectSearch}
                     onChange={e => setProjectSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 border rounded text-sm"
-                    style={{ borderColor: '#575F60' }}
+                    className="w-full pl-10 pr-3 py-2 border text-sm"
+                    style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
                   />
                 </div>
                 <select 
                   value={pid} 
                   onChange={e => setPid(e.target.value)} 
-                  className="w-full px-3 py-1.5 border rounded text-sm"
-                  style={{ borderColor: '#575F60' }}
+                  className="w-full px-3 py-2 border text-sm"
+                  style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
                   disabled={saving}
                 >
                   <option value="">Select</option>
@@ -240,46 +241,46 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                 </select>
                 <button
                   onClick={() => setShowProjectForm(!showProjectForm)}
-                  className="w-full px-3 py-1.5 border rounded text-xs flex items-center justify-center gap-1"
-                  style={{ borderColor: '#575F60', color: '#1F1F1F' }}
+                  className="w-full px-3 py-2 border text-xs flex items-center justify-center gap-1"
+                  style={{ borderColor: '#575F60', color: 'white', backgroundColor: 'transparent' }}
                 >
                   <Plus className="w-3 h-3" /> Quick Add Project
                 </button>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Start Date</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Start Date</label>
               <input 
                 type="date" 
                 value={start} 
                 onChange={e => setStart(e.target.value)} 
-                className="w-full px-3 py-1.5 border rounded text-sm"
-                style={{ borderColor: '#575F60' }}
+                className="w-full px-3 py-2 border text-sm"
+                style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
                 disabled={saving}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>End Date</label>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>End Date</label>
               <input 
                 type="date" 
                 value={end} 
                 onChange={e => setEnd(e.target.value)} 
-                className="w-full px-3 py-1.5 border rounded text-sm"
-                style={{ borderColor: '#575F60' }}
+                className="w-full px-3 py-2 border text-sm"
+                style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
                 disabled={saving}
               />
             </div>
           </div>
 
           {showProjectForm && (
-            <div className="p-3 border rounded" style={{ backgroundColor: 'white', borderColor: '#575F60' }}>
+            <div className="p-4 border" style={{ backgroundColor: '#F3F3F3', borderColor: '#575F60' }}>
               <div className="grid grid-cols-4 gap-2 mb-2">
                 <input
                   type="text"
                   placeholder="Project name"
                   value={projectForm.name}
                   onChange={e => setProjectForm({ ...projectForm, name: e.target.value })}
-                  className="px-2 py-1 border rounded text-xs"
+                  className="px-3 py-2 border text-sm"
                   style={{ borderColor: '#575F60' }}
                 />
                 <input
@@ -287,7 +288,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   placeholder="Number"
                   value={projectForm.number}
                   onChange={e => setProjectForm({ ...projectForm, number: e.target.value })}
-                  className="px-2 py-1 border rounded text-xs"
+                  className="px-3 py-2 border text-sm"
                   style={{ borderColor: '#575F60' }}
                 />
                 <input
@@ -295,21 +296,21 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   placeholder="Client"
                   value={projectForm.client}
                   onChange={e => setProjectForm({ ...projectForm, client: e.target.value })}
-                  className="px-2 py-1 border rounded text-xs"
+                  className="px-3 py-2 border text-sm"
                   style={{ borderColor: '#575F60' }}
                 />
-                <div className="flex gap-1">
+                <div className="flex gap-2">
                   <button
                     onClick={saveProject}
-                    className="flex-1 px-2 py-1 rounded text-xs border"
-                    style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
+                    className="flex-1 px-3 py-2 text-sm font-medium border"
+                    style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
                   >
                     Add
                   </button>
                   <button
                     onClick={() => { setShowProjectForm(false); setProjectForm({ name: '', number: '', client: '' }); }}
-                    className="px-2 py-1 border rounded text-xs"
-                    style={{ borderColor: '#575F60' }}
+                    className="px-3 py-2 border text-sm"
+                    style={{ borderColor: '#575F60', color: '#575F60' }}
                   >
                     Cancel
                   </button>
@@ -319,43 +320,42 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           )}
           
           <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-xs font-medium" style={{ color: '#575F60' }}>Items to Book</label>
+            <div className="flex justify-between mb-3">
+              <label className="text-sm font-medium" style={{ color: '#575F60' }}>Items to Book</label>
               <button 
                 onClick={() => setBis([...bis, { itemId: '', quantity: 0 }])} 
                 disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 rounded text-xs border"
-                style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
+                className="flex items-center gap-1 px-3 py-2 text-sm font-medium border"
+                style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
               >
-                <Plus className="w-3 h-3" /> Add Item
+                <Plus className="w-4 h-4" /> Add Item
               </button>
             </div>
             
             {bis.map((bi, i) => (
-              <div key={i} className="mb-4 p-3 border rounded" style={{ backgroundColor: 'white', borderColor: '#575F60' }}>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-medium" style={{ color: '#575F60' }}>Item {i + 1}</label>
+              <div key={i} className="mb-4 p-4 border" style={{ backgroundColor: '#F3F3F3', borderColor: '#575F60' }}>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-medium" style={{ color: '#191A23' }}>Item {i + 1}</label>
                   <button 
                     onClick={() => setBis(bis.filter((_, idx) => idx !== i))} 
                     disabled={bis.length === 1 || saving} 
-                    className="text-xs flex items-center gap-1 disabled:opacity-40"
+                    className="text-xs flex items-center gap-1"
                     style={{ color: '#dc2626' }}
                   >
-                    <X className="w-3 h-3" /> Remove
+                    <X className="w-4 h-4" /> Remove
                   </button>
                 </div>
                 
-                {/* Search and Group Filters */}
-                <div className="mb-2 space-y-2">
+                <div className="mb-3 space-y-2">
                   <div className="relative">
-                    <Search className="absolute left-2 top-2 w-3 h-3" style={{ color: '#575F60' }} />
+                    <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: '#575F60' }} />
                     <input
                       type="text"
                       placeholder="Search items..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full pl-7 pr-2 py-1 border rounded text-xs"
-                      style={{ borderColor: '#575F60' }}
+                      className="w-full pl-10 pr-3 py-2 border text-sm"
+                      style={{ borderColor: '#575F60', backgroundColor: 'white' }}
                     />
                   </div>
                   
@@ -365,41 +365,31 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                       <button
                         key={g.id}
                         onClick={() => toggleGroup(g.id)}
-                        className="px-2 py-0.5 rounded text-xs border"
+                        className="px-2 py-1 text-xs border"
                         style={{
-                          backgroundColor: selectedGroups.includes(g.id) ? '#FFED00' : 'transparent',
-                          borderColor: selectedGroups.includes(g.id) ? '#1F1F1F' : '#575F60',
-                          color: '#1F1F1F'
+                          backgroundColor: selectedGroups.includes(g.id) ? '#FFED00' : 'white',
+                          borderColor: selectedGroups.includes(g.id) ? '#191A23' : '#575F60',
+                          color: '#191A23'
                         }}
                       >
                         {g.name}
                       </button>
                     ))}
-                    {selectedGroups.length > 0 && (
-                      <button
-                        onClick={() => setSelectedGroups([])}
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{ color: '#dc2626' }}
-                      >
-                        Clear
-                      </button>
-                    )}
                   </div>
                 </div>
 
-                {/* Item Selection - Clean button list */}
-                <div className="flex flex-wrap gap-1 mb-2">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {filteredItems.map(it => (
                     <button
                       key={it.id}
                       type="button"
                       onClick={() => { const n = [...bis]; n[i].itemId = it.id; setBis(n); }}
                       disabled={saving}
-                      className="flex items-center gap-1 px-2 py-1 rounded border text-xs"
+                      className="flex items-center gap-2 px-3 py-2 border text-sm"
                       style={{
-                        backgroundColor: bi.itemId === it.id ? '#FFED00' : 'transparent',
-                        borderColor: bi.itemId === it.id ? '#1F1F1F' : '#575F60',
-                        color: '#1F1F1F'
+                        backgroundColor: bi.itemId === it.id ? '#FFED00' : 'white',
+                        borderColor: bi.itemId === it.id ? '#191A23' : '#575F60',
+                        color: '#191A23'
                       }}
                     >
                       <ItemIcon item={it} size="sm" />
@@ -408,26 +398,25 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                   ))}
                 </div>
 
-                {/* Quantity Input */}
                 <input 
                   type="number" 
                   placeholder="Quantity" 
                   value={bi.quantity || ''} 
                   onChange={e => { const n = [...bis]; n[i].quantity = +e.target.value || 0; setBis(n); }} 
-                  className="w-full px-3 py-1.5 border rounded text-sm"
-                  style={{ borderColor: '#575F60' }}
+                  className="w-full px-3 py-2 border text-sm"
+                  style={{ borderColor: '#575F60', backgroundColor: 'white' }}
                   disabled={saving}
                 />
               </div>
             ))}
           </div>
           
-          {err && <p className="text-xs font-medium" style={{ color: '#dc2626' }}>{err}</p>}
+          {err && <p className="text-sm font-medium" style={{ color: '#dc2626' }}>{err}</p>}
           <button 
             onClick={save} 
             disabled={saving}
-            className="px-4 py-2 rounded text-sm border"
-            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
+            className="px-6 py-3 text-sm font-medium border"
+            style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
           >
             {saving ? 'Saving...' : edit ? 'Update' : 'Create'}
           </button>
@@ -435,35 +424,37 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       </div>
       
       {/* Bookings Table */}
-      <div className="border rounded" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
+      <div className="border" style={{ backgroundColor: 'white', borderColor: '#191A23' }}>
         <table className="w-full">
-          <thead style={{ backgroundColor: 'rgba(87, 95, 96, 0.1)' }}>
+          <thead style={{ backgroundColor: '#F3F3F3' }}>
             <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium" style={{ color: '#575F60' }}>Items</th>
-              <th className="px-3 py-2 text-left text-xs font-medium" style={{ color: '#575F60' }}>Project</th>
-              <th className="px-3 py-2 text-left text-xs font-medium" style={{ color: '#575F60' }}>Start</th>
-              <th className="px-3 py-2 text-left text-xs font-medium" style={{ color: '#575F60' }}>End</th>
-              <th className="px-3 py-2 text-left text-xs font-medium" style={{ color: '#575F60' }}>Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Items</th>
+              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Project</th>
+              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Start</th>
+              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>End</th>
+              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {bookings.map(b => (
-              <tr key={b.id} className="border-t" style={{ borderColor: '#e5e7eb' }}>
-                <td className="px-3 py-2">
+              <tr key={b.id} className="border-t" style={{ borderColor: '#F3F3F3' }}>
+                <td className="px-4 py-3">
                   {b.items.map((bi, i) => {
                     const it = items.find(item => item.id === bi.itemId);
                     return (
-                      <div key={i} className="flex items-center gap-1 mb-1">
+                      <div key={i} className="flex items-center gap-2 mb-1">
                         {it && <ItemIcon item={it} size="sm" />}
-                        <span className="text-xs" style={{ color: '#1F1F1F' }}>{it?.name} <span style={{ color: '#575F60' }}>x{bi.quantity}</span></span>
+                        <span className="text-sm" style={{ color: '#191A23' }}>
+                          {it?.name} <span style={{ color: '#575F60' }}>x{bi.quantity}</span>
+                        </span>
                       </div>
                     );
                   })}
                 </td>
-                <td className="px-3 py-2 text-xs" style={{ color: '#1F1F1F' }}>{projects.find(p => p.id === b.projectId)?.name}</td>
-                <td className="px-3 py-2 text-xs" style={{ color: '#1F1F1F' }}>{formatDate(b.startDate)}</td>
-                <td className="px-3 py-2 text-xs" style={{ color: '#1F1F1F' }}>{formatDate(b.endDate)}</td>
-                <td className="px-3 py-2">
+                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{projects.find(p => p.id === b.projectId)?.name}</td>
+                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{formatDate(b.startDate)}</td>
+                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{formatDate(b.endDate)}</td>
+                <td className="px-4 py-3">
                   <button 
                     onClick={() => { 
                       setEdit(b.id); 
@@ -475,13 +466,13 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                     className="mr-2"
                     style={{ color: '#575F60' }}
                   >
-                    <Edit2 className="w-3 h-3" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDelete(b.id)} 
                     style={{ color: '#dc2626' }}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
               </tr>

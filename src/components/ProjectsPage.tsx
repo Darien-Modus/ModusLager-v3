@@ -12,7 +12,6 @@ interface ProjectsPageProps {
   refreshData: () => void;
 }
 
-// Isolated search component to prevent parent re-renders
 const ProjectSearch = ({ onSearch }: { onSearch: (term: string) => void }) => {
   const [localSearch, setLocalSearch] = useState('');
   
@@ -23,15 +22,15 @@ const ProjectSearch = ({ onSearch }: { onSearch: (term: string) => void }) => {
   };
   
   return (
-    <div className="relative mb-3">
-      <Search className="absolute left-2 top-2 w-3 h-3" style={{ color: '#575F60' }} />
+    <div className="relative mb-6">
+      <Search className="absolute left-3 top-3 w-4 h-4" style={{ color: '#575F60' }} />
       <input
         type="text"
         placeholder="Search projects..."
         value={localSearch}
         onChange={handleChange}
-        className="w-full pl-7 pr-2 py-1 border text-xs"
-        style={{ borderColor: '#575F60' }}
+        className="w-full pl-10 pr-4 py-2 border text-sm"
+        style={{ borderColor: '#575F60', backgroundColor: 'white' }}
       />
     </div>
   );
@@ -137,19 +136,22 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
   };
 
   return (
-    <div style={{ fontFamily: 'Raleway, sans-serif' }}>
-      <h2 className="text-base font-semibold mb-3" style={{ color: '#1F1F1F' }}>Projects</h2>
+    <div style={{ fontFamily: "Raleway, sans-serif" }}>
+      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Projects</h2>
       
-      {/* Add/Edit Form */}
-      <div className="mb-3 p-2 border" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
-        <div className="grid grid-cols-4 gap-2">
+      {/* Add/Edit Form - Dark Background */}
+      <div className="mb-6 p-6 border" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
+        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
+          {edit ? 'Edit Project' : 'Add New Project'}
+        </h3>
+        <div className="grid grid-cols-4 gap-4">
           <input 
             type="text" 
             placeholder="Project name" 
             value={form.name} 
             onChange={e => setForm({ ...form, name: e.target.value })} 
-            className="px-2 py-1 border text-xs"
-            style={{ borderColor: '#575F60' }}
+            className="px-3 py-2 border text-sm"
+            style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
             disabled={saving}
           />
           <input 
@@ -157,8 +159,8 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
             placeholder="Number (e.g. PRJ-001)" 
             value={form.num} 
             onChange={e => setForm({ ...form, num: e.target.value })} 
-            className="px-2 py-1 border text-xs"
-            style={{ borderColor: '#575F60' }}
+            className="px-3 py-2 border text-sm"
+            style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
             disabled={saving}
           />
           <input 
@@ -166,17 +168,17 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
             placeholder="Client name" 
             value={form.client} 
             onChange={e => setForm({ ...form, client: e.target.value })} 
-            className="px-2 py-1 border text-xs"
-            style={{ borderColor: '#575F60' }}
+            className="px-3 py-2 border text-sm"
+            style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
             disabled={saving}
           />
           <button 
             onClick={save} 
             disabled={saving}
-            className="px-2 py-1 text-xs border"
-            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
+            className="px-4 py-2 text-sm font-medium border"
+            style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
           >
-            {saving ? 'Saving...' : edit ? 'Update' : 'Add Project'}
+            {saving ? 'Saving...' : edit ? 'Update' : 'Add'}
           </button>
         </div>
         {edit && (
@@ -185,91 +187,98 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
               setEdit(null);
               setForm({ name: '', num: '', client: '' });
             }}
-            className="mt-2 px-2 py-1 border text-xs"
-            style={{ borderColor: '#575F60' }}
+            className="mt-4 px-4 py-2 border text-sm"
+            style={{ borderColor: '#575F60', color: 'white' }}
           >
             Cancel Edit
           </button>
         )}
       </div>
       
-      {/* Search - using isolated component */}
+      {/* Search */}
       <ProjectSearch onSearch={setSearchTerm} />
       
-      {/* Projects List with Collapsible Cards */}
-      <div className="space-y-2">
+      {/* Projects List */}
+      <div className="space-y-4">
         {filteredProjects.map(project => {
           const projectBookings = getProjectBookings(project.id);
           const isExpanded = expandedProjects.has(project.id);
           
           return (
-            <div key={project.id} className="border" style={{ borderColor: '#575F60', backgroundColor: 'white' }}>
-              {/* Project Header */}
+            <div key={project.id} className="border" style={{ borderColor: '#191A23', backgroundColor: 'white' }}>
               <div 
-                className="flex items-center justify-between p-2 cursor-pointer hover:bg-opacity-80"
+                className="flex items-center justify-between p-4 cursor-pointer"
                 onClick={() => toggleProject(project.id)}
-                style={{ backgroundColor: '#F5F5F5' }}
+                style={{ backgroundColor: '#F3F3F3' }}
               >
-                <div className="flex items-center gap-2 flex-1">
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" style={{ color: '#575F60' }} />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" style={{ color: '#575F60' }} />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium" style={{ color: '#1F1F1F' }}>{project.name}</span>
-                      <span className="text-xs" style={{ color: '#575F60' }}>({project.number})</span>
-                    </div>
-                    <div className="text-xs" style={{ color: '#575F60' }}>{project.client}</div>
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                    <ChevronRight className="w-5 h-5" style={{ color: '#191A23' }} />
                   </div>
-                  <span className="text-xs" style={{ color: '#575F60' }}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base font-medium" style={{ color: '#191A23' }}>{project.name}</span>
+                      <span className="text-sm" style={{ color: '#575F60' }}>({project.number})</span>
+                    </div>
+                    <div className="text-sm" style={{ color: '#575F60' }}>{project.client}</div>
+                  </div>
+                  <span className="text-sm" style={{ color: '#575F60' }}>
                     {projectBookings.length} booking{projectBookings.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 
-                <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                   <button 
                     onClick={() => { 
                       setEdit(project.id); 
                       setForm({ name: project.name, num: project.number, client: project.client }); 
                     }} 
-                    className="p-1"
                     style={{ color: '#575F60' }}
                   >
-                    <Edit2 className="w-3 h-3" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDelete(project.id)} 
-                    className="p-1"
                     style={{ color: '#dc2626' }}
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
               
-              {/* Expanded: Show Bookings */}
               {isExpanded && (
-                <div className="p-2 border-t" style={{ borderColor: '#575F60' }}>
+                <div className="p-4 border-t" style={{ borderColor: '#F3F3F3' }}>
                   {projectBookings.length === 0 ? (
-                    <p className="text-xs" style={{ color: '#575F60' }}>No bookings for this project</p>
+                    <p className="text-sm" style={{ color: '#575F60' }}>No bookings for this project</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {projectBookings.map(booking => (
-                        <div key={booking.id} className="p-2 border" style={{ borderColor: '#e5e7eb', backgroundColor: 'white' }}>
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="text-xs font-medium" style={{ color: '#1F1F1F' }}>
+                        <div key={booking.id} className="p-3 border" style={{ borderColor: '#F3F3F3', backgroundColor: 'white' }}>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-medium" style={{ color: '#191A23' }}>
                               {formatDate(booking.startDate)} - {formatDate(booking.endDate)}
                             </span>
                           </div>
                           <div className="space-y-1">
                             {booking.items.map((bi, idx) => {
                               const item = items.find(i => i.id === bi.itemId);
+                              const isRainbow = item?.color && !item.color.startsWith('#');
                               return (
-                                <div key={idx} className="flex items-center gap-1">
-                                  {item && <ItemIcon item={item} size="sm" />}
-                                  <span className="text-xs" style={{ color: '#1F1F1F' }}>
+                                <div key={idx} className="flex items-center gap-2">
+                                  {item && (
+                                    <div 
+                                      className="w-6 h-6 border-2 flex-shrink-0"
+                                      style={{ 
+                                        borderColor: '#575F60',
+                                        ...(isRainbow
+                                          ? { background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }
+                                          : { backgroundColor: item.color || '#9CA3AF' }
+                                        )
+                                      }}
+                                      title={item.color === '#9CA3AF' ? 'Alu' : item.color === '#191A23' ? 'Black' : 'Other'}
+                                    />
+                                  )}
+                                  <span className="text-sm" style={{ color: '#191A23' }}>
                                     {item?.name || 'Unknown item'} 
                                     <span style={{ color: '#575F60' }}> x{bi.quantity}</span>
                                   </span>
@@ -288,8 +297,8 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
         })}
         
         {filteredProjects.length === 0 && (
-          <div className="text-center py-8" style={{ color: '#575F60' }}>
-            <p className="text-xs">No projects found</p>
+          <div className="text-center py-12" style={{ color: '#575F60' }}>
+            <p className="text-sm">No projects found</p>
           </div>
         )}
       </div>

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Edit2, Trash2, ChevronDown, ChevronRight, FolderPlus, Plus } from 'lucide-react';
+import { Edit2, Trash2, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
 import { Item, Booking, Group } from '../types';
 import { calcAvailable } from '../utils/helpers';
-import { ItemIcon } from './ItemIcon';
 import { supabase } from '../utils/supabase';
 
 interface ItemsPageProps {
@@ -23,7 +22,7 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
   
   const colorOptions = [
     { id: 'alu', name: 'Alu', color: '#9CA3AF' },
-    { id: 'black', name: 'Black', color: '#1F1F1F' },
+    { id: 'black', name: 'Black', color: '#191A23' },
     { id: 'other', name: 'Other', color: 'rainbow' }
   ];
 
@@ -62,7 +61,7 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
         
         if (error) {
           console.error('Supabase UPDATE error:', error);
-          alert(`Cannot save: ${error.message}\n\nCheck console for details.`);
+          alert(`Cannot save: ${error.message}`);
           return;
         }
       } else {
@@ -72,7 +71,7 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
         
         if (error) {
           console.error('Supabase INSERT error:', error);
-          alert(`Cannot save: ${error.message}\n\nCheck console for details.`);
+          alert(`Cannot save: ${error.message}`);
           return;
         }
       }
@@ -186,43 +185,44 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
   }));
 
   return (
-    <div style={{ fontFamily: 'Raleway, sans-serif' }}>
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="text-base font-semibold" style={{ color: '#1F1F1F' }}>Items</h2>
-      </div>
+    <div style={{ fontFamily: "Raleway, sans-serif" }}>
+      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Items</h2>
 
-      {/* Add/Edit Item Form */}
-      <div className="mb-3 p-2 border" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
-        <div className="grid grid-cols-5 gap-2 mb-2">
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Name</label>
+      {/* Add/Edit Form - Dark Background */}
+      <div className="mb-6 p-6 border" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
+        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
+          {edit ? 'Edit Item' : 'Add New Item'}
+        </h3>
+        <div className="grid grid-cols-12 gap-4 items-end">
+          <div className="col-span-4">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Name</label>
             <input 
               type="text" 
               placeholder="Item name" 
               value={form.name} 
               onChange={e => setForm({ ...form, name: e.target.value })} 
-              className="w-full px-2 py-1 border text-xs"
-              style={{ borderColor: '#575F60' }}
+              className="w-full px-3 py-2 border text-sm"
+              style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23', height: '42px' }}
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Quantity</label>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Quantity</label>
             <input 
               type="number" 
-              placeholder="Quantity" 
+              placeholder="Qty" 
               value={form.qty} 
               onChange={e => setForm({ ...form, qty: e.target.value })} 
-              className="w-full px-2 py-1 border text-xs"
-              style={{ borderColor: '#575F60' }}
+              className="w-full px-3 py-2 border text-sm"
+              style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23', height: '42px' }}
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Group</label>
+          <div className="col-span-2">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Group</label>
             <select
               value={form.groupId}
               onChange={e => setForm({ ...form, groupId: e.target.value })}
-              className="w-full px-2 py-1 border text-xs"
-              style={{ borderColor: '#575F60' }}
+              className="w-full px-3 py-2 border text-sm"
+              style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23', height: '42px' }}
             >
               <option value="">Ungrouped</option>
               {groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000').map(g => (
@@ -230,40 +230,38 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
               ))}
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: '#575F60' }}>Color</label>
-            <div className="flex gap-1">
+          <div className="col-span-3">
+            <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Color</label>
+            <div className="flex gap-2">
               {colorOptions.map(opt => (
                 <button
                   key={opt.id}
                   type="button"
                   onClick={() => setForm({ ...form, color: opt.id })}
-                  className={`flex-1 px-1 py-1 border text-xs ${
-                    form.color === opt.id ? 'border-2' : ''
-                  }`}
+                  className="flex-1 border-2"
                   style={{ 
+                    height: '42px',
                     borderColor: form.color === opt.id ? '#FFED00' : '#575F60',
-                    backgroundColor: 'white'
+                    ...(opt.color === 'rainbow'
+                      ? { background: 'linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)' }
+                      : { backgroundColor: opt.color }
+                    )
                   }}
-                >
-                  {opt.color === 'rainbow' ? (
-                    <div className="w-full h-4 rounded" style={{ background: 'linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet)' }} />
-                  ) : (
-                    <div className="w-full h-4 rounded" style={{ backgroundColor: opt.color }} />
-                  )}
-                  <div className="text-xs mt-0.5">{opt.name}</div>
-                </button>
+                  title={opt.name}
+                />
               ))}
             </div>
           </div>
-          <button 
-            onClick={saveItem} 
-            disabled={saving}
-            className="px-2 py-1 text-xs mt-5 border"
-            style={{ backgroundColor: '#FFED00', borderColor: '#1F1F1F', color: '#1F1F1F' }}
-          >
-            {saving ? 'Saving...' : edit ? 'Update' : <><Plus className="w-3 h-3 inline" /> Add</>}
-          </button>
+          <div className="col-span-1">
+            <button 
+              onClick={saveItem} 
+              disabled={saving}
+              className="w-full px-2 py-2 text-sm font-medium border"
+              style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23', height: '42px' }}
+            >
+              {saving ? '...' : edit ? 'Update' : 'Add'}
+            </button>
+          </div>
         </div>
         {edit && (
           <button 
@@ -271,55 +269,55 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
               setEdit(null);
               setForm({ name: '', qty: '', color: 'alu', groupId: '' });
             }}
-            className="px-2 py-1 border text-xs"
-            style={{ borderColor: '#575F60' }}
+            className="mt-4 px-4 py-2 border text-sm"
+            style={{ borderColor: '#575F60', color: 'white' }}
           >
             Cancel Edit
           </button>
         )}
       </div>
 
-      {/* Groups Display with Add Group button in top right */}
-      <div className="mb-2 flex justify-between items-center">
-        <span className="text-xs font-medium" style={{ color: '#575F60' }}>Groups & Items</span>
+      {/* Groups Display with Add Group button */}
+      <div className="mb-4 flex justify-between items-center">
+        <span className="text-sm font-medium" style={{ color: '#575F60' }}>Groups & Items</span>
         <button 
           onClick={() => setShowGroupForm(!showGroupForm)}
-          className="flex items-center gap-1 px-2 py-1 border text-xs"
+          className="flex items-center gap-2 px-4 py-2 border text-sm font-medium"
           style={{ 
             backgroundColor: '#FFED00',
-            borderColor: '#1F1F1F',
-            color: '#1F1F1F'
+            borderColor: '#191A23',
+            color: '#191A23'
           }}
         >
-          <FolderPlus className="w-3 h-3" /> Add Group
+          <FolderPlus className="w-4 h-4" /> Add Group
         </button>
       </div>
 
       {/* Group Form */}
       {showGroupForm && (
-        <div className="mb-3 p-2 border" style={{ backgroundColor: '#F5F5F5', borderColor: '#575F60' }}>
-          <div className="grid grid-cols-3 gap-2">
+        <div className="mb-4 p-4 border" style={{ backgroundColor: '#F3F3F3', borderColor: '#575F60' }}>
+          <div className="grid grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="Group name"
               value={groupForm.name}
               onChange={e => setGroupForm({ ...groupForm, name: e.target.value })}
-              className="px-2 py-1 border text-xs"
+              className="px-3 py-2 border text-sm"
               style={{ borderColor: '#575F60' }}
             />
             <input
               type="color"
               value={groupForm.color}
               onChange={e => setGroupForm({ ...groupForm, color: e.target.value })}
-              className="h-7 border"
+              className="h-10 border"
               style={{ borderColor: '#575F60' }}
             />
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <button 
                 onClick={saveGroup} 
                 disabled={saving}
-                className="flex-1 px-2 py-1 text-xs"
-                style={{ backgroundColor: '#FFED00', color: '#1F1F1F' }}
+                className="flex-1 px-4 py-2 text-sm font-medium border"
+                style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
               >
                 {saving ? 'Saving...' : editingGroup ? 'Update' : 'Create'}
               </button>
@@ -329,7 +327,7 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
                   setEditingGroup(null); 
                   setGroupForm({ name: '', color: '#FFED00' }); 
                 }}
-                className="px-2 py-1 border text-xs"
+                className="px-4 py-2 border text-sm"
                 style={{ borderColor: '#575F60' }}
               >
                 Cancel
@@ -340,83 +338,92 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
       )}
 
       {/* Groups List */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         {groupedItems.map(({ group, items: groupItems }) => (
-          <div key={group.id} className="border" style={{ borderColor: '#575F60', backgroundColor: 'white' }}>
+          <div key={group.id} className="border" style={{ borderColor: '#191A23', backgroundColor: 'white' }}>
             <div 
-              className="flex items-center justify-between p-2 cursor-pointer hover:bg-opacity-80"
+              className="flex items-center justify-between p-4 cursor-pointer"
               onClick={() => toggleGroup(group.id)}
-              style={{ backgroundColor: '#F5F5F5' }}
+              style={{ backgroundColor: '#F3F3F3' }}
             >
-              <div className="flex items-center gap-2">
-                {collapsedGroups.has(group.id) ? (
-                  <ChevronRight className="w-4 h-4" style={{ color: '#575F60' }} />
-                ) : (
-                  <ChevronDown className="w-4 h-4" style={{ color: '#575F60' }} />
-                )}
-                <div className="w-3 h-3" style={{ backgroundColor: group.color }} />
-                <span className="text-xs font-medium" style={{ color: '#1F1F1F' }}>
+              <div className="flex items-center gap-3">
+                <div className="transition-transform duration-200" style={{ transform: collapsedGroups.has(group.id) ? 'rotate(0deg)' : 'rotate(90deg)' }}>
+                  <ChevronRight className="w-5 h-5" style={{ color: '#191A23' }} />
+                </div>
+                <span className="text-base font-medium" style={{ color: '#191A23' }}>
                   {group.name} ({groupItems.length})
                 </span>
               </div>
               
               {group.id !== '00000000-0000-0000-0000-000000000000' && (
-                <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                   <button 
                     onClick={() => { 
                       setEditingGroup(group.id); 
                       setGroupForm({ name: group.name, color: group.color || '#FFED00' }); 
                       setShowGroupForm(true); 
                     }}
-                    className="p-1"
                     style={{ color: '#575F60' }}
                   >
-                    <Edit2 className="w-3 h-3" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => deleteGroup(group.id)}
                     style={{ color: '#dc2626' }}
-                    className="p-1"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               )}
             </div>
             
             {!collapsedGroups.has(group.id) && (
-              <div className="border-t" style={{ borderColor: '#575F60' }}>
+              <div className="border-t" style={{ borderColor: '#F3F3F3' }}>
                 <table className="w-full">
-                  <thead style={{ backgroundColor: 'rgba(87, 95, 96, 0.1)' }}>
+                  <thead style={{ backgroundColor: '#F3F3F3' }}>
                     <tr>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Icon</th>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Name</th>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Total</th>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Available</th>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Move To Group</th>
-                      <th className="px-2 py-1 text-left text-xs font-medium" style={{ color: '#575F60' }}>Actions</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60', width: '60px' }}>Colour</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60', width: '80px' }}>Total</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60', width: '100px' }}>Available</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60', width: '220px' }}>Move To</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60', width: '100px' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {groupItems.map(item => {
                       const today = new Date().toISOString().split('T')[0];
                       const avail = calcAvailable(item.id, today, today, bookings, items);
+                      const isRainbow = item.color && !item.color.startsWith('#');
+                      
                       return (
-                        <tr key={item.id} className="border-t" style={{ borderColor: '#e5e7eb' }}>
-                          <td className="px-2 py-1"><ItemIcon item={item} size="sm" /></td>
-                          <td className="px-2 py-1 text-xs" style={{ color: '#1F1F1F' }}>{item.name}</td>
-                          <td className="px-2 py-1 text-xs" style={{ color: '#1F1F1F' }}>{item.totalQuantity}</td>
-                          <td className="px-2 py-1">
-                            <span className="px-1 py-0.5 text-xs" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>
+                        <tr key={item.id} className="border-t" style={{ borderColor: '#F3F3F3' }}>
+                          <td className="px-4 py-3">
+                            <div 
+                              className="w-8 h-8 border-2"
+                              style={{ 
+                                borderColor: '#575F60',
+                                ...(isRainbow
+                                  ? { background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }
+                                  : { backgroundColor: item.color || '#9CA3AF' }
+                                )
+                              }}
+                              title={item.color === '#9CA3AF' ? 'Alu' : item.color === '#191A23' ? 'Black' : 'Other'}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{item.name}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{item.totalQuantity}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-1 text-xs" style={{ backgroundColor: '#dcfce7', color: '#166534' }}>
                               {avail}
                             </span>
                           </td>
-                          <td className="px-2 py-1">
+                          <td className="px-4 py-3">
                             <select
                               value={item.groupId || 'ungrouped'}
                               onChange={(e) => moveItemToGroup(item.id, e.target.value)}
-                              className="px-1 py-0.5 border text-xs"
-                              style={{ borderColor: '#575F60' }}
+                              className="px-2 py-1 border text-sm"
+                              style={{ borderColor: '#575F60', width: '100%' }}
                             >
                               <option value="ungrouped">Ungrouped</option>
                               {groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000').map(g => (
@@ -424,27 +431,27 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
                               ))}
                             </select>
                           </td>
-                          <td className="px-2 py-1">
+                          <td className="px-4 py-3">
                             <button 
                               onClick={() => { 
                                 setEdit(item.id); 
                                 setForm({ 
                                   name: item.name, 
                                   qty: item.totalQuantity.toString(), 
-                                  color: item.color === '#9CA3AF' ? 'alu' : item.color === '#1F1F1F' ? 'black' : 'other',
+                                  color: item.color === '#9CA3AF' ? 'alu' : item.color === '#191A23' ? 'black' : 'other',
                                   groupId: item.groupId || ''
                                 }); 
                               }} 
-                              className="mr-1"
+                              className="mr-2"
                               style={{ color: '#575F60' }}
                             >
-                              <Edit2 className="w-3 h-3" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => deleteItem(item.id)} 
                               style={{ color: '#dc2626' }}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </td>
                         </tr>

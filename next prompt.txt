@@ -1,0 +1,11 @@
+Thank you. The logos are still not visible. Do you maybe want me to place them somewhere in the folder? If so, please specify the exact folder. Please try to keep the same file name so I don't have to rename them, but anyways tell me what did you connect, under which name.
+
+Furthermore, no changes on the colour stripes in the inventory page. Please try to see what is the problem there.
+
+Still the same issue on the items page - the colours are not visible - not in the add new item nor in the colour column. I need them to show grey and black, respectfully. Please try to figure out why are they still not showing. Also, the components on the add new item section need to all be the same height and aligned. Right now the group dropdown is a bit shorter than the name and quantity, the colours are much taller and the add button is somewhere in between and aligned to the bottom of the colours, while all the other components are aligned at the top. Please fix all of that. And you can also make the name field 50% longer while making the quantity field 50% shorter (there won't be a need for more than 3-4 digits)
+
+On the projcets page, the colours of items are also not showing when the card is opened and when it shows bookings. Please fix that.
+
+Same thing on the bookings page and the calendar page, no item colours, please fix it.
+
+Speaking of the calendar page, could you make the booking details that appear on hover be a bit closer to the cursor and always appear in the direction towards the center of the page? Because right now, when you hover on the ones near the bottom or the side it falls out off the screen and you can't read it.
