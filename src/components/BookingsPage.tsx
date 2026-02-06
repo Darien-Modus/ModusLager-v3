@@ -58,10 +58,13 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     return filtered;
   };
 
-  const filteredProjects = projects.filter(p => 
-    p.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-    p.number.toLowerCase().includes(projectSearch.toLowerCase())
-  );
+  const filteredProjects = projects.filter(p => {
+  const search = projectSearch.toLowerCase();
+  const name = (p.name || '').toLowerCase();
+  const number = String(p.number || '').toLowerCase();
+
+  return name.includes(search) || number.includes(search);
+});
 
   const saveProject = async () => {
     if (!projectForm.name || !projectForm.number || !projectForm.client) return;
