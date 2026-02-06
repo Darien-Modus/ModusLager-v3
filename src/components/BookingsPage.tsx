@@ -23,8 +23,8 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [edit, setEdit] = useState<string | null>(null);
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [tableSearch, setTableSearch] = useState(''); // New state for table filtering
+  const [projectSearch, setProjectSearch] = useState(''); 
+  const [itemSearch, setItemSearch] = useState(''); 
   const [selectedGroups, setSelectedGroups] = useState<string[]>(beMatrixGroup ? [beMatrixGroup.id] : []);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectForm, setProjectForm] = useState({ name: '', number: '', client: '' });
@@ -37,6 +37,11 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     }
   };
 
+  const filteredProjects = projects.filter(p => 
+    String(p.name || '').toLowerCase().includes(projectSearch.toLowerCase()) ||
+    String(p.number || '').toLowerCase().includes(projectSearch.toLowerCase())
+  );
+
   const filterItems = () => {
     let filtered = items;
     if (selectedGroups.length > 0) {
@@ -47,17 +52,16 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         return selectedGroups.includes(item.groupId || '');
       });
     }
-    if (searchTerm) {
+    if (itemSearch) {
       filtered = filtered.filter(item => 
-        String(item.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        String(item.name || '').toLowerCase().includes(itemSearch.toLowerCase())
       );
     }
     return filtered;
   };
 
-  // Logic to filter the bookings list at the bottom
   const displayBookings = bookings.filter(b => {
-    const s = tableSearch.toLowerCase();
+    const s = projectSearch.toLowerCase();
     if (!s) return true;
     const p = projects.find(proj => proj.id === b.projectId);
     const projectName = String(p?.name || '').toLowerCase();
@@ -79,120 +83,90 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       setShowProjectForm(false);
     } catch (error) {
       console.error('Error saving project:', error);
-      alert('Error saving project.');
     }
   };
 
   const save = async () => {
-    if (!pid || !start || !end || bis.length === 0) { 
-      setErr('All fields required'); 
-      return; 
-    }
-    
-    for (const bi of bis) {
-      if (!bi.itemId || bi.quantity <= 0) { 
-        setErr('All items need selection and quantity > 0'); 
-        return; 
-      }
-      const item = items.find(i => i.id === bi.itemId);
-      if (item && bi.quantity > item.totalQuantity) {
-        setErr("Looks like you don't own so many!");
-        return;
-      }
-      const avail = calcAvailable(bi.itemId, start, end, bookings, items, edit || undefined);
-      if (bi.quantity > avail) {
-        setErr("Oooops! Items already booked for that period.");
-        return;
-      }
-    }
-    
+    if (!pid || !start || !end || bis.length === 0) { setErr('All fields required'); return; }
     setSaving(true);
     try {
       const bookingData = { project_id: pid, start_date: start, end_date: end };
       if (edit) {
         await supabase.from('bookings').update(bookingData).eq('id', edit);
         await supabase.from('booking_items').delete().eq('booking_id', edit);
-        const bookingItems = bis.map(bi => ({ booking_id: edit, item_id: bi.itemId, quantity: bi.quantity }));
-        await supabase.from('booking_items').insert(bookingItems);
+        await supabase.from('booking_items').insert(bis.map(bi => ({ booking_id: edit, item_id: bi.itemId, quantity: bi.quantity })));
       } else {
         const { data, error } = await supabase.from('bookings').insert([bookingData]).select().single();
         if (error) throw error;
-        const bookingItems = bis.map(bi => ({ booking_id: data.id, item_id: bi.itemId, quantity: bi.quantity }));
-        await supabase.from('booking_items').insert(bookingItems);
+        await supabase.from('booking_items').insert(bis.map(bi => ({ booking_id: data.id, item_id: bi.itemId, quantity: bi.quantity })));
       }
       await refreshData();
       setBis([{ itemId: '', quantity: 0 }]); setPid(''); setStart(''); setEnd(''); setEdit(null); setErr('');
-    } catch (error) {
-      console.error('Error saving booking:', error);
-    } finally {
-      setSaving(false);
+    } catch (error) { 
+      console.error('Error saving booking:', error); 
+    } finally { 
+      setSaving(false); 
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this booking?')) return;
     try {
-      const { error } = await supabase.from('bookings').delete().eq('id', id);
-      if (error) throw error;
+      await supabase.from('bookings').delete().eq('id', id);
       await refreshData();
     } catch (error) {
       console.error('Error deleting booking:', error);
     }
   };
 
-  const filteredItems = filterItems();
-
   return (
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
       <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Bookings</h2>
       
       <div className="p-6 border mb-6" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
-        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
-          {edit ? 'Edit Booking' : 'Create New Booking'}
-        </h3>
+        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>{edit ? 'Edit Booking' : 'Create New Booking'}</h3>
         
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Project</label>
-              <select 
-                value={pid} 
-                onChange={e => setPid(e.target.value)} 
-                className="w-full px-3 py-2 border text-sm"
-                style={{ borderColor: '#575F60', backgroundColor: 'white', color: '#191A23' }}
-                disabled={saving}
-              >
-                <option value="">Select</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.number})</option>)}
-              </select>
-              <button
-                onClick={() => setShowProjectForm(!showProjectForm)}
-                className="w-full mt-2 px-3 py-2 border text-xs flex items-center justify-center gap-1"
-                style={{ borderColor: '#575F60', color: 'white', backgroundColor: 'transparent' }}
-              >
-                <Plus className="w-3 h-3" /> Quick Add Project
-              </button>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Search & Select Project</label>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Type project name or number..." 
+                    value={projectSearch} 
+                    onChange={e => setProjectSearch(e.target.value)} 
+                    className="w-full pl-10 pr-3 py-2 border text-sm"
+                  />
+                </div>
+                <select value={pid} onChange={e => setPid(e.target.value)} className="w-full px-3 py-2 border text-sm" style={{ backgroundColor: 'white' }}>
+                  <option value="">Select Project</option>
+                  {filteredProjects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.number})</option>)}
+                </select>
+                <button onClick={() => setShowProjectForm(!showProjectForm)} className="w-full mt-2 px-3 py-2 border text-xs text-white" style={{ borderColor: '#575F60' }}>
+                  <Plus className="w-3 h-3 inline mr-1" /> Quick Add Project
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Start Date</label>
-              <input type="date" value={start} onChange={e => setStart(e.target.value)} className="w-full px-3 py-2 border text-sm" style={{ borderColor: '#575F60', backgroundColor: 'white' }} disabled={saving} />
+              <input type="date" value={start} onChange={e => setStart(e.target.value)} className="w-full px-3 py-2 border text-sm" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>End Date</label>
-              <input type="date" value={end} onChange={e => setEnd(e.target.value)} className="w-full px-3 py-2 border text-sm" style={{ borderColor: '#575F60', backgroundColor: 'white' }} disabled={saving} />
+              <input type="date" value={end} onChange={e => setEnd(e.target.value)} className="w-full px-3 py-2 border text-sm" />
             </div>
           </div>
 
           {showProjectForm && (
-            <div className="p-4 border" style={{ backgroundColor: '#F3F3F3', borderColor: '#575F60' }}>
-              <div className="grid grid-cols-4 gap-2 mb-2">
-                <input type="text" placeholder="Project name" value={projectForm.name} onChange={e => setProjectForm({ ...projectForm, name: e.target.value })} className="px-3 py-2 border text-sm" style={{ borderColor: '#575F60' }} />
-                <input type="text" placeholder="Number" value={projectForm.number} onChange={e => setProjectForm({ ...projectForm, number: e.target.value })} className="px-3 py-2 border text-sm" style={{ borderColor: '#575F60' }} />
-                <input type="text" placeholder="Client" value={projectForm.client} onChange={e => setProjectForm({ ...projectForm, client: e.target.value })} className="px-3 py-2 border text-sm" style={{ borderColor: '#575F60' }} />
-                <div className="flex gap-2">
-                  <button onClick={saveProject} className="flex-1 px-3 py-2 text-sm font-medium border" style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}>Add</button>
-                  <button onClick={() => setShowProjectForm(false)} className="px-3 py-2 border text-sm" style={{ borderColor: '#575F60', color: '#575F60' }}>Cancel</button>
-                </div>
+            <div className="p-4 border bg-[#F3F3F3]">
+              <div className="grid grid-cols-4 gap-2">
+                <input type="text" placeholder="Name" value={projectForm.name} onChange={e => setProjectForm({ ...projectForm, name: e.target.value })} className="px-3 py-2 border text-sm" />
+                <input type="text" placeholder="No." value={projectForm.number} onChange={e => setProjectForm({ ...projectForm, number: e.target.value })} className="px-3 py-2 border text-sm" />
+                <input type="text" placeholder="Client" value={projectForm.client} onChange={e => setProjectForm({ ...projectForm, client: e.target.value })} className="px-3 py-2 border text-sm" />
+                <button onClick={saveProject} className="bg-[#FFED00] px-3 py-2 text-sm font-medium border">Add Project</button>
               </div>
             </div>
           )}
@@ -200,104 +174,25 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
           <div>
             <div className="flex justify-between mb-3">
               <label className="text-sm font-medium" style={{ color: '#575F60' }}>Items to Book</label>
-              <button onClick={() => setBis([...bis, { itemId: '', quantity: 0 }])} className="flex items-center gap-1 px-3 py-2 text-sm font-medium border" style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}>
-                <Plus className="w-4 h-4" /> Add Item
+              <button onClick={() => setBis([...bis, { itemId: '', quantity: 0 }])} className="bg-[#FFED00] px-3 py-2 text-sm font-medium border">
+                <Plus className="w-4 h-4 inline mr-1" /> Add Item
               </button>
             </div>
             
             {bis.map((bi, i) => (
-              <div key={i} className="mb-4 p-4 border" style={{ backgroundColor: '#F3F3F3', borderColor: '#575F60' }}>
+              <div key={i} className="mb-4 p-4 border bg-[#F3F3F3]">
                 <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-medium" style={{ color: '#191A23' }}>Item {i + 1}</label>
-                  <button onClick={() => setBis(bis.filter((_, idx) => idx !== i))} className="text-xs flex items-center gap-1" style={{ color: '#dc2626' }}>
-                    <X className="w-4 h-4" /> Remove
-                  </button>
+                  <label className="text-sm font-medium">Item {i + 1}</label>
+                  <button onClick={() => setBis(bis.filter((_, idx) => idx !== i))} className="text-xs text-red-600 font-medium">Remove</button>
                 </div>
-                
-                <div className="mb-3 space-y-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: '#575F60' }} />
-                    <input type="text" placeholder="Search items..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-3 py-2 border text-sm" style={{ borderColor: '#575F60', backgroundColor: 'white' }} />
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {[{ id: 'ungrouped', name: 'Ungrouped' }, ...groups.filter(g => g.id !== '00000000-0000-0000-0000-000000000000')].map(g => (
-                      <button key={g.id} onClick={() => toggleGroup(g.id)} className="px-2 py-1 text-xs border" style={{ backgroundColor: selectedGroups.includes(g.id) ? '#FFED00' : 'white', borderColor: selectedGroups.includes(g.id) ? '#191A23' : '#575F60', color: '#191A23' }}>{g.name}</button>
-                    ))}
-                  </div>
+                <div className="relative mb-3">
+                   <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                   <input type="text" placeholder="Filter item list..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="w-full pl-10 pr-3 py-2 border text-sm" />
                 </div>
-
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {filteredItems.map(it => (
-                    <button key={it.id} type="button" onClick={() => { const n = [...bis]; n[i].itemId = it.id; setBis(n); }} className="flex items-center gap-2 px-3 py-2 border text-sm" style={{ backgroundColor: bi.itemId === it.id ? '#FFED00' : 'white', borderColor: bi.itemId === it.id ? '#191A23' : '#575F60', color: '#191A23' }}>
-                      <ItemIcon item={it} size="sm" />
-                      <span>{it.name}</span>
+                  {filterItems().map(it => (
+                    <button key={it.id} onClick={() => { const n = [...bis]; n[i].itemId = it.id; setBis(n); }} className={`flex items-center gap-2 px-3 py-2 border text-sm ${bi.itemId === it.id ? 'bg-[#FFED00]' : 'bg-white'}`}>
+                      <ItemIcon item={it} size="sm" /><span>{it.name}</span>
                     </button>
                   ))}
                 </div>
-                <input type="number" value={bi.quantity || ''} onChange={e => { const n = [...bis]; n[i].quantity = +e.target.value || 0; setBis(n); }} className="w-full px-3 py-2 border text-sm" style={{ borderColor: '#575F60', backgroundColor: 'white' }} />
-              </div>
-            ))}
-          </div>
-          
-          {err && <p className="text-sm font-medium" style={{ color: '#dc2626' }}>{err}</p>}
-          <button onClick={save} disabled={saving} className="px-6 py-3 text-sm font-medium border" style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}>
-            {saving ? 'Saving...' : edit ? 'Update' : 'Create'}
-          </button>
-        </div>
-      </div>
-      
-      {/* Table Search Bar */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: '#575F60' }} />
-        <input 
-          type="text" 
-          placeholder="Search bookings table..." 
-          value={tableSearch} 
-          onChange={e => setTableSearch(e.target.value)} 
-          className="w-full pl-10 pr-3 py-2 border text-sm" 
-          style={{ borderColor: '#191A23', backgroundColor: 'white' }} 
-        />
-      </div>
-
-      <div className="border" style={{ backgroundColor: 'white', borderColor: '#191A23' }}>
-        <table className="w-full">
-          <thead style={{ backgroundColor: '#F3F3F3' }}>
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Items</th>
-              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Project</th>
-              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Start</th>
-              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>End</th>
-              <th className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#575F60' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayBookings.map(b => (
-              <tr key={b.id} className="border-t" style={{ borderColor: '#F3F3F3' }}>
-                <td className="px-4 py-3">
-                  {b.items.map((bi, i) => {
-                    const it = items.find(item => item.id === bi.itemId);
-                    return (
-                      <div key={i} className="flex items-center gap-2 mb-1">
-                        {it && <ItemIcon item={it} size="sm" />}
-                        <span className="text-sm" style={{ color: '#191A23' }}>
-                          {it?.name} <span style={{ color: '#575F60' }}>x{bi.quantity}</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </td>
-                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{projects.find(p => p.id === b.projectId)?.name}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{formatDate(b.startDate)}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: '#191A23' }}>{formatDate(b.endDate)}</td>
-                <td className="px-4 py-3">
-                  <button onClick={() => { setEdit(b.id); setBis(b.items); setPid(b.projectId); setStart(b.startDate); setEnd(b.endDate); window.scrollTo(0,0); }} className="mr-2" style={{ color: '#575F60' }}><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => handleDelete(b.id)} style={{ color: '#dc2626' }}><Trash2 className="w-4 h-4" /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
