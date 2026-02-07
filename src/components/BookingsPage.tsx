@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Edit2, Trash2, Plus, X, Search } from 'lucide-react';
 import { Booking, BookingItem, Item, Project, Group } from '../types';
 import { calcAvailable, formatDate } from '../utils/helpers';
@@ -26,6 +26,20 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGroups, setSelectedGroups] = useState<string[]>(beMatrixGroup ? [beMatrixGroup.id] : []);
   const [projectSearch, setProjectSearch] = useState('');
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  
+  const projectDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(event.target as Node)) {
+        setShowProjectDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleGroup = (groupId: string) => {
     if (selectedGroups.includes(groupId)) {
@@ -38,7 +52,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
   const filterItems = () => {
     let filtered = items;
     
-    // Filter by groups
     if (selectedGroups.length > 0) {
       filtered = filtered.filter(item => {
         if (selectedGroups.includes('ungrouped')) {
@@ -48,7 +61,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
       });
     }
     
-    // Filter by search
     if (searchTerm) {
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -58,10 +70,20 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     return filtered;
   };
 
-  const filteredProjects = projects.filter(p => 
-    p.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
-    p.number.toLowerCase().includes(projectSearch.toLowerCase())
-  );
+  // Safe filtering to prevent crashes - search all fields
+  const filteredProjects = projects.filter(p => {
+    const searchLower = projectSearch.toLowerCase();
+    const name = String(p?.name || '').toLowerCase();
+    const number = String(p?.number || '').toLowerCase();
+    const client = String(p?.client || '').toLowerCase();
+    return name.includes(searchLower) || number.includes(searchLower) || client.includes(searchLower);
+  });
+
+  const selectProject = (project: Project) => {
+    setPid(project.id);
+    setProjectSearch(project.name);
+    setShowProjectDropdown(false);
+  };
 
   const save = async () => {
     if (!pid || !start || !end || bis.length === 0) { 
@@ -91,7 +113,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     setSaving(true);
     try {
       if (edit) {
-        // Update existing booking
         const { error: bookingError } = await supabase
           .from('bookings')
           .update({
@@ -103,7 +124,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         
         if (bookingError) throw bookingError;
         
-        // Delete old booking_items
         const { error: deleteError } = await supabase
           .from('booking_items')
           .delete()
@@ -111,7 +131,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         
         if (deleteError) throw deleteError;
         
-        // Insert new booking_items
         const bookingItems = bis.filter(b => b.itemId && b.quantity > 0).map(bi => ({
           booking_id: edit,
           item_id: bi.itemId,
@@ -124,7 +143,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         
         if (itemsError) throw itemsError;
       } else {
-        // Create new booking
         const { data: bookingData, error: bookingError } = await supabase
           .from('bookings')
           .insert([{
@@ -137,7 +155,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         
         if (bookingError) throw bookingError;
         
-        // Insert booking_items
         const bookingItems = bis.filter(b => b.itemId && b.quantity > 0).map(bi => ({
           booking_id: bookingData.id,
           item_id: bi.itemId,
@@ -151,10 +168,7 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         if (itemsError) throw itemsError;
       }
       
-      // Refresh data from database
       await refreshData();
-      
-      // Reset form
       setBis([{ itemId: '', quantity: 0 }]);
       setPid('');
       setStart('');
@@ -194,7 +208,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
       <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Bookings</h2>
       
-      {/* Create/Edit Form - Dark Background */}
       <div className="p-6 border mb-6" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
         <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
           {edit ? 'Edit Booking' : 'Create New Booking'}
@@ -202,32 +215,58 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
-            <div>
+            {/* Searchable Project Dropdown */}
+            <div ref={projectDropdownRef}>
               <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Project</label>
-              <div className="space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-4 h-4" style={{ color: '#575F60' }} />
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                    value={projectSearch}
-                    onChange={e => setProjectSearch(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border text-sm"
-                    style={{ borderColor: '#575F60', backgroundColor: 'white' }}
-                  />
-                </div>
-                <select 
-                  value={pid} 
-                  onChange={e => setPid(e.target.value)} 
-                  className="w-full px-3 py-2 border text-sm"
+              <div className="relative">
+                <Search className="absolute left-3 top-3 w-4 h-4 z-10" style={{ color: '#575F60' }} />
+                <input
+                  type="text"
+                  placeholder="Search or select project..."
+                  value={projectSearch}
+                  onFocus={() => setShowProjectDropdown(true)}
+                  onChange={e => {
+                    setProjectSearch(e.target.value);
+                    setShowProjectDropdown(true);
+                    if (!e.target.value) setPid('');
+                  }}
+                  className="w-full pl-10 pr-3 py-2 border text-sm"
                   style={{ borderColor: '#575F60', backgroundColor: 'white' }}
-                  disabled={saving}
-                >
-                  <option value="">Select</option>
-                  {filteredProjects.map(p => <option key={p.id} value={p.id}>{p.name} ({p.number})</option>)}
-                </select>
+                />
+                
+                {showProjectDropdown && (
+                  <div 
+                    className="absolute z-20 w-full mt-1 border max-h-60 overflow-y-auto shadow-lg"
+                    style={{ backgroundColor: 'white', borderColor: '#575F60' }}
+                  >
+                    {filteredProjects.length === 0 ? (
+                      <div className="px-3 py-2 text-sm" style={{ color: '#575F60' }}>
+                        No projects found
+                      </div>
+                    ) : (
+                      filteredProjects.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => selectProject(p)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b"
+                          style={{ 
+                            borderColor: '#F3F3F3',
+                            backgroundColor: pid === p.id ? '#FFED00' : 'white'
+                          }}
+                        >
+                          <div className="font-medium" style={{ color: '#191A23' }}>{p.name}</div>
+                          <div className="text-xs" style={{ color: '#575F60' }}>
+                            {p.number} • {p.client}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             </div>
+            
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Start Date</label>
               <input 
@@ -356,7 +395,6 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
         </div>
       </div>
       
-      {/* Bookings Table */}
       <div className="border" style={{ backgroundColor: 'white', borderColor: '#191A23' }}>
         <table className="w-full">
           <thead style={{ backgroundColor: '#F3F3F3' }}>
@@ -395,6 +433,8 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
                       setPid(b.projectId); 
                       setStart(b.startDate); 
                       setEnd(b.endDate); 
+                      const proj = projects.find(p => p.id === b.projectId);
+                      if (proj) setProjectSearch(proj.name);
                     }} 
                     className="mr-2"
                     style={{ color: '#575F60' }}
