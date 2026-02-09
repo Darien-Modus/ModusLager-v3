@@ -121,24 +121,24 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
 
   return (
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
-      <div className="mb-6">
-        <h1 className="text-4xl font-medium" style={{ color: '#191A23' }}>
+      {/* Title - aligned with Bookings/Calendar */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-4xl font-medium" style={{ color: '#191A23' }}>
           Live Inventory Overview
-        </h1>
+        </h2>
       </div>
       
+      {/* Black Section - matches Bookings/Calendar */}
       <div 
-        className="p-6 mb-6 border"
+        className="p-6 mb-6 border-2"
         style={{ 
           backgroundColor: '#191A23',
           borderColor: '#191A23'
         }}
       >
-        <h2 className="text-xl font-medium mb-4" style={{ color: '#FFED00' }}>
-          Check Availability
-        </h2>
+        <span className="text-sm font-medium mr-3" style={{ color: '#FFED00' }}>Check Availability:</span>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mt-3">
           <div>
             <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>
               Start Date
@@ -177,7 +177,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
       {primaryGroup && (
         <div className="mb-6">
           <div 
-            className="border"
+            className="border-2"
             style={{ 
               backgroundColor: 'white',
               borderColor: '#191A23'
@@ -208,7 +208,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
             </div>
 
             {!collapsedGroups.has(primaryGroup.id) && (
-              <div className="p-4 pt-0 border-t" style={{ borderColor: '#F3F3F3' }}>
+              <div className="p-4 pt-0 border-t-2" style={{ borderColor: '#F3F3F3' }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {getGroupItems(primaryGroup.id).map(item => renderItemCard(item))}
                 </div>
@@ -229,7 +229,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
             return (
               <div 
                 key={group.id} 
-                className="border"
+                className="border-2"
                 style={{ 
                   backgroundColor: 'white',
                   borderColor: '#191A23'
@@ -260,7 +260,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
                 </div>
 
                 {!isCollapsed && (
-                  <div className="p-4 pt-0 border-t" style={{ borderColor: '#F3F3F3' }}>
+                  <div className="p-4 pt-0 border-t-2" style={{ borderColor: '#F3F3F3' }}>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {groupItems.map(item => renderItemCard(item))}
                     </div>
@@ -274,7 +274,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
 
       {ungroupedGroup && getGroupItems(ungroupedGroup.id).length > 0 && (
         <div 
-          className="border"
+          className="border-2"
           style={{ 
             backgroundColor: 'white',
             borderColor: '#191A23'
@@ -305,7 +305,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
           </div>
 
           {!collapsedGroups.has(ungroupedGroup.id) && (
-            <div className="p-4 pt-0 border-t" style={{ borderColor: '#F3F3F3' }}>
+            <div className="p-4 pt-0 border-t-2" style={{ borderColor: '#F3F3F3' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {getGroupItems(ungroupedGroup.id).map(item => renderItemCard(item))}
               </div>
@@ -316,7 +316,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
 
       {items.length === 0 && (
         <div 
-          className="text-center py-16 border"
+          className="text-center py-16 border-2"
           style={{ 
             backgroundColor: 'white',
             borderColor: '#575F60',

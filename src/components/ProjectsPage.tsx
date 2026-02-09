@@ -137,14 +137,17 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
 
   return (
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
-      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Projects</h2>
+      {/* Title - aligned with other pages */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-4xl font-medium" style={{ color: '#191A23' }}>Projects</h2>
+      </div>
       
-      {/* Add/Edit Form - Dark Background */}
-      <div className="mb-6 p-6 border" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
-        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
-          {edit ? 'Edit Project' : 'Add New Project'}
-        </h3>
-        <div className="grid grid-cols-4 gap-4">
+      {/* Add/Edit Form - matches Bookings/Calendar */}
+      <div className="mb-6 p-6 border-2" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
+        <span className="text-sm font-medium mr-3" style={{ color: '#FFED00' }}>
+          {edit ? 'Edit Project:' : 'Add New Project:'}
+        </span>
+        <div className="grid grid-cols-4 gap-4 mt-3">
           <input 
             type="text" 
             placeholder="Project name" 

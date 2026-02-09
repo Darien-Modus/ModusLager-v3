@@ -26,10 +26,13 @@ export interface BookingItem {
   quantity: number;
 }
 
+export type BookingStatus = 'potential' | 'confirmed';
+
 export interface Booking {
   id: string;
   items: BookingItem[];
   projectId: string;
   startDate: string;
   endDate: string;
+  status: BookingStatus;
 }

@@ -1,0 +1,21 @@
+Nothing was fixed with the files you sent me. I think you need to change your approach in order to get it to work. 
+
+Issues:
+
+
+
+1. Page Title - "Live Inventory Overview", "Items", "Projects", "Bookings", "Calendar".
+
+The first 3 are ok, but "Bookings" and "Calendar" are off. They all need to have the same spacing from the header. The Bookings and the Calendar page also have the "Add Booking" button, and that button should be the same height and same vertical placement/spacing as the Page Title, only aligned to the right.
+
+
+
+2. Top Black Section - TBS for short. It needs to have the same spacing from the Page Title on every single page. On Overview and Items page this section has bigger height extending downwards than on the other 3.
+
+
+
+3. Top Black Section Title - The text displayed in yellow against the black background in the TBS. It needs to have the same spacing from the top and the left on Overview, Items and Projects, while the yellow text that says "Show" on Bookings and Calendar should stay centered on the TBS as they are now.
+
+
+
+4. Calendar still showing one day away on hover

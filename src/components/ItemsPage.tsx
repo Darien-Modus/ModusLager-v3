@@ -186,14 +186,17 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
 
   return (
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
-      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Items</h2>
+      {/* Title - aligned with other pages */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-4xl font-medium" style={{ color: '#191A23' }}>Items</h2>
+      </div>
 
-      {/* Add/Edit Form - Dark Background */}
-      <div className="mb-6 p-6 border" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
-        <h3 className="text-lg font-medium mb-4" style={{ color: '#FFED00' }}>
-          {edit ? 'Edit Item' : 'Add New Item'}
-        </h3>
-        <div className="grid grid-cols-12 gap-4 items-end">
+      {/* Add/Edit Form - matches Bookings/Calendar */}
+      <div className="mb-6 p-6 border-2" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
+        <span className="text-sm font-medium mr-3" style={{ color: '#FFED00' }}>
+          {edit ? 'Edit Item:' : 'Add New Item:'}
+        </span>
+        <div className="grid grid-cols-12 gap-4 items-end mt-3">
           <div className="col-span-4">
             <label className="block text-sm font-medium mb-2" style={{ color: 'white' }}>Name</label>
             <input 
@@ -340,7 +343,7 @@ export const ItemsPage: React.FC<ItemsPageProps> = ({ items, bookings, groups, r
       {/* Groups List */}
       <div className="space-y-4">
         {groupedItems.map(({ group, items: groupItems }) => (
-          <div key={group.id} className="border" style={{ borderColor: '#191A23', backgroundColor: 'white' }}>
+          <div key={group.id} className="border-2" style={{ borderColor: '#191A23', backgroundColor: 'white' }}>
             <div 
               className="flex items-center justify-between p-4 cursor-pointer"
               onClick={() => toggleGroup(group.id)}
