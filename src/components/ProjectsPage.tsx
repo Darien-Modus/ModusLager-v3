@@ -53,11 +53,14 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ projects, bookings, 
     setExpandedProjects(newExpanded);
   };
   
-  const filteredProjects = projects.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.client.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = (projects || []).filter(p => {
+    if (!p) return false;
+    return (
+      String(p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(p.number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(p.client || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
   
   const getProjectBookings = (projectId: string) => {
     return bookings.filter(b => b.projectId === projectId);

@@ -81,11 +81,12 @@ export const BookingsPage: React.FC<BookingsPageProps> = ({ bookings, items, pro
     return filtered;
   };
 
-  const filteredProjects = projects.filter(p => {
+  const filteredProjects = (projects || []).filter(p => {
+    if (!p) return false;
     const searchLower = projectSearch.toLowerCase();
-    const name = String(p?.name || '').toLowerCase();
-    const number = String(p?.number || '').toLowerCase();
-    const client = String(p?.client || '').toLowerCase();
+    const name = String(p.name || '').toLowerCase();
+    const number = String(p.number || '').toLowerCase();
+    const client = String(p.client || '').toLowerCase();
     return name.includes(searchLower) || number.includes(searchLower) || client.includes(searchLower);
   });
 
