@@ -115,14 +115,38 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ items, bookings, gro
       const filesToProcess = Array.from(files).slice(0, remainingSlots);
       
       for (const file of filesToProcess) {
-        const compressed = await compressImage(file);
-        newImages.push(compressed);
+        // 1. Compress the image first
+        const compressedBase64 = await compressImage(file);
+        
+        // 2. Convert that text back into a file file
+        const res = await fetch(compressedBase64);
+        const blob = await res.blob();
+
+        // 3. Create a unique name so files don't overwrite each other
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // 4. Upload it to the 'items' bucket we just created
+        const { error: uploadError } = await supabase.storage
+          .from('items') 
+          .upload(filePath, blob);
+
+        if (uploadError) throw uploadError;
+
+        // 5. Get the permanent Public URL
+        const { data } = supabase.storage
+          .from('items')
+          .getPublicUrl(filePath);
+          
+        newImages.push(data.publicUrl);
       }
       
+      // 6. Save the link, not the image data
       setItemForm(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading images:', error);
-      alert('Error uploading images');
+      alert('Error uploading images: ' + error.message);
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
