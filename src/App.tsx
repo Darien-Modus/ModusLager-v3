@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Package, BookOpen, BarChart3 } from 'lucide-react';
+import { Calendar, Package, BookOpen, BarChart3, ClipboardList } from 'lucide-react';
 import { Item, Project, Booking, Group } from './types';
 import { supabase } from './utils/supabase';
 import { ItemsPage } from './components/ItemsPage';
@@ -18,12 +18,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [openBookingModal, setOpenBookingModal] = useState(false);
 
-  // Fetch all data from Supabase
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      // Fetch items
       const { data: itemsData, error: itemsError } = await supabase
         .from('items')
         .select('*')
@@ -31,7 +29,6 @@ export default function App() {
       
       if (itemsError) throw itemsError;
       
-      // Fetch projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
         .select('*')
@@ -39,7 +36,6 @@ export default function App() {
       
       if (projectsError) throw projectsError;
       
-      // Fetch groups
       const { data: groupsData, error: groupsError } = await supabase
         .from('groups')
         .select('*')
@@ -47,7 +43,6 @@ export default function App() {
       
       if (groupsError) throw groupsError;
       
-      // Fetch bookings with booking_items
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select(`
@@ -61,13 +56,16 @@ export default function App() {
       
       if (bookingsError) throw bookingsError;
       
-      // Transform data to match app format
       const transformedItems: Item[] = itemsData?.map(item => ({
         id: item.id,
         name: item.name,
         totalQuantity: item.total_quantity,
         color: item.color,
-        groupId: item.group_id
+        groupId: item.group_id,
+        images: item.images,           // Array of images
+        iconIndex: item.icon_index,     // Selected icon index
+        dimensions: item.dimensions,
+        description: item.description
       })) || [];
       
       const transformedProjects: Project[] = projectsData?.map(project => ({
@@ -81,7 +79,8 @@ export default function App() {
         id: group.id,
         name: group.name,
         color: group.color,
-        sortOrder: group.sort_order
+        sortOrder: group.sort_order,
+        displayMode: group.display_mode
       })) || [];
       
       const transformedBookings: Booking[] = bookingsData?.map(booking => ({
@@ -225,7 +224,7 @@ export default function App() {
                 color: '#1F1F1F'
               }}
             >
-              Bookings
+              <ClipboardList className="w-4 h-4" /> Bookings
             </button>
             <button 
               onClick={() => setPage('calendar')} 

@@ -58,201 +58,113 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ bookings, items, pro
 
   return (
     <div style={{ fontFamily: "Raleway, sans-serif" }}>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-4xl font-medium" style={{ color: '#191A23' }}>Calendar</h2>
-        <button 
-          onClick={onOpenBookingModal}
-          className="flex items-center gap-2 px-6 py-3 text-sm font-medium border-2"
-          style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23' }}
-        >
-          <Plus className="w-5 h-5" /> Add Booking
-        </button>
-      </div>
-      
-      <div className="mb-6 p-6 border-2" style={{ backgroundColor: '#191A23', borderColor: '#191A23' }}>
-        <span className="text-sm font-medium mr-3" style={{ color: '#FFED00' }}>Show:</span>
-        <div className="inline-flex gap-2">
-          <button
-            onClick={() => setStatusFilter('all')}
-            className="px-4 py-2 text-sm border-2"
-            style={{
-              backgroundColor: statusFilter === 'all' ? '#FFED00' : 'white',
-              borderColor: statusFilter === 'all' ? '#191A23' : '#575F60',
-              color: '#191A23'
-            }}
-          >
-            All Bookings
-          </button>
-          <button
-            onClick={() => setStatusFilter('confirmed')}
-            className="px-4 py-2 text-sm border-2"
-            style={{
-              backgroundColor: statusFilter === 'confirmed' ? '#FFED00' : 'white',
-              borderColor: statusFilter === 'confirmed' ? '#191A23' : '#575F60',
-              color: '#191A23'
-            }}
-          >
-            Confirmed Only
-          </button>
-          <button
-            onClick={() => setStatusFilter('potential')}
-            className="px-4 py-2 text-sm border-2"
-            style={{
-              backgroundColor: statusFilter === 'potential' ? '#FFF8DC' : 'white',
-              borderColor: statusFilter === 'potential' ? '#191A23' : '#575F60',
-              color: '#191A23'
-            }}
-          >
-            Potential Only
+      <h2 className="text-4xl font-medium mb-6" style={{ color: '#191A23' }}>Calendar</h2>
+
+      <div className="mb-6 border-2" style={{ backgroundColor: '#191A23', borderColor: '#191A23', maxWidth: '1248px', margin: '0 auto 24px', height: '90px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', padding: '0 24px', gap: '16px' }}>
+          <span className="text-sm font-medium" style={{ color: '#FFED00', flexShrink: 0 }}>Show:</span>
+          <button onClick={() => setStatusFilter('all')} className="px-4 py-2 text-sm border-2" style={{ backgroundColor: statusFilter === 'all' ? '#FFED00' : 'white', borderColor: statusFilter === 'all' ? '#191A23' : '#575F60', color: '#191A23', flexShrink: 0 }}>All Bookings</button>
+          <button onClick={() => setStatusFilter('confirmed')} className="px-4 py-2 text-sm border-2" style={{ backgroundColor: statusFilter === 'confirmed' ? '#FFED00' : 'white', borderColor: statusFilter === 'confirmed' ? '#191A23' : '#575F60', color: '#191A23', flexShrink: 0 }}>Confirmed</button>
+          <button onClick={() => setStatusFilter('potential')} className="px-4 py-2 text-sm border-2" style={{ backgroundColor: statusFilter === 'potential' ? '#e9e3d3' : 'white', borderColor: statusFilter === 'potential' ? '#191A23' : '#575F60', color: '#191A23', flexShrink: 0, borderStyle: statusFilter === 'potential' ? 'dashed' : 'solid', fontStyle: statusFilter === 'potential' ? 'italic' : 'normal' }}>Potential</button>
+          <div style={{ flex: 1 }} />
+          {/* UPDATED: px-2 instead of px-6, strict width: 160px */}
+          <button onClick={onOpenBookingModal} className="flex items-center justify-center gap-2 px-2 py-2 text-sm font-medium border-2" style={{ backgroundColor: '#FFED00', borderColor: '#191A23', color: '#191A23', flexShrink: 0, width: '160px' }}>
+            <Plus className="w-5 h-5" /> Add Booking
           </button>
         </div>
       </div>
-      
-      <div ref={calendarRef} className="border-2 relative" style={{ backgroundColor: 'white', borderColor: '#191A23' }}>
-        <div className="flex justify-between items-center p-4 border-b-2" style={{ borderColor: '#F3F3F3' }}>
-          <button 
-            onClick={() => setD(new Date(y, m - 1))} 
-            className="px-4 py-2 border-2 text-sm font-medium"
-            style={{ borderColor: '#575F60' }}
-          >
-            Previous
-          </button>
-          <h3 className="text-xl font-medium" style={{ color: '#191A23' }}>
-            {d.toLocaleString('default', { month: 'long', year: 'numeric' })}
-          </h3>
-          <button 
-            onClick={() => setD(new Date(y, m + 1))} 
-            className="px-4 py-2 border-2 text-sm font-medium"
-            style={{ borderColor: '#575F60' }}
-          >
-            Next
-          </button>
+
+      <div style={{ maxWidth: '1248px', margin: '0 auto' }}>
+        <div className="flex justify-between items-center mb-6">
+          <button onClick={() => setD(new Date(y, m - 1))} className="px-4 py-2 border-2 text-sm font-medium" style={{ borderColor: '#575F60', color: '#191A23' }}>Previous</button>
+          <h3 className="text-2xl font-medium" style={{ color: '#191A23' }}>{new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(d)}</h3>
+          <button onClick={() => setD(new Date(y, m + 1))} className="px-4 py-2 border-2 text-sm font-medium" style={{ borderColor: '#575F60', color: '#191A23' }}>Next</button>
         </div>
-        
-        <div className="grid grid-cols-7 gap-px" style={{ backgroundColor: '#575F60' }}>
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(x => (
-            <div key={x} className="text-center font-medium py-2 text-sm" style={{ backgroundColor: '#F3F3F3', color: '#191A23' }}>
-              {x}
-            </div>
-          ))}
-          
-          {Array.from({ length: first }).map((_, i) => (
-            <div key={`e${i}`} style={{ backgroundColor: '#F3F3F3', minHeight: '120px' }} />
-          ))}
-          
-          {Array.from({ length: days }).map((_, i) => {
-            const day = i + 1;
-            const bs = getB(day);
-            const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
-            return (
-              <div 
-                key={day} 
-                className="p-2 relative"
-                style={{ backgroundColor: 'white', minHeight: '120px' }}
-                onMouseEnter={(e) => handleMouseEnter(dateStr, bs, e)}
-                onMouseLeave={() => setHover(null)}
-              >
-                <div className="font-semibold text-sm mb-1" style={{ color: '#191A23' }}>
-                  {day}
-                </div>
-                
-                {bs.slice(0, 5).map((b) => {
-                  const proj = projects.find(p => p.id === b.projectId);
-                  const isPotential = b.status === 'potential';
-                  return (
-                    <div 
-                      key={b.id} 
-                      className="text-xs px-1 py-0.5 mb-0.5 truncate border"
-                      style={{ 
-                        backgroundColor: isPotential ? '#FFF8DC' : '#FFED00',
-                        color: '#191A23',
-                        borderColor: '#191A23',
-                        borderStyle: isPotential ? 'dashed' : 'solid',
-                        opacity: isPotential ? 0.7 : 1,
-                        fontStyle: isPotential ? 'italic' : 'normal'
-                      }}
-                    >
-                      {proj?.name}
-                    </div>
-                  );
-                })}
-                
-                {bs.length > 5 && (
-                  <div className="text-xs" style={{ color: '#575F60' }}>
-                    +{bs.length - 5} more
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {hover && hoverBookings.length > 0 && (
-          <div 
-            className="absolute z-10 border-2 p-3 w-64"
-            style={{ 
-              backgroundColor: 'white', 
-              borderColor: '#FFED00',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              top: `${tooltipPos.y}px`,
-              left: `${tooltipPos.x}px`
-            }}
-          >
-            <div className="font-semibold mb-2 text-sm" style={{ color: '#191A23' }}>
-              {formatDate(hover)}
-            </div>
-            {hoverBookings.map(b => {
-              const proj = projects.find(p => p.id === b.projectId);
-              const isPotential = b.status === 'potential';
+
+        <div ref={calendarRef} className="relative border-2" style={{ borderColor: '#191A23', backgroundColor: 'white' }}>
+          <div className="grid grid-cols-7 border-b-2" style={{ borderColor: '#191A23' }}>
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="p-3 text-center text-sm font-medium" style={{ color: '#575F60', backgroundColor: '#F3F3F3' }}>{day}</div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7">
+            {Array.from({ length: first }, (_, i) => <div key={`empty-${i}`} className="border-r border-b" style={{ borderColor: '#F3F3F3', height: '200px' }} />)}
+            {Array.from({ length: days }, (_, i) => {
+              const day = i + 1;
+              const bs = getB(day);
+              const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const isToday = dateStr === new Date().toISOString().split('T')[0];
+              
               return (
-                <div key={b.id} className="mb-3 pb-3 border-b last:border-b-0" style={{ borderColor: '#F3F3F3' }}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="font-medium text-sm" style={{ color: '#191A23', fontStyle: isPotential ? 'italic' : 'normal' }}>
-                      {proj?.name}
+                <div key={day} className="border-r border-b relative" style={{ borderColor: '#F3F3F3', height: '200px', backgroundColor: isToday ? '#fffcd0' : 'white' }} onMouseEnter={(e) => handleMouseEnter(dateStr, bs, e)} onMouseLeave={() => setHover(null)}>
+                  <div className="p-2">
+                    <span className="text-sm font-medium" style={{ color: isToday ? '#191A23' : '#575F60' }}>{day}</span>
+                  </div>
+                  {bs.length > 0 && (
+                    <div className="px-2 pb-2 space-y-1">
+                      {bs.slice(0, 5).map(b => {
+                        const project = projects.find(p => p.id === b.projectId);
+                        const isConfirmed = b.status === 'confirmed';
+                        
+                        return (
+                          <div key={b.id} className="text-xs px-2 py-1 truncate border" style={{ 
+                            backgroundColor: isConfirmed ? '#FFED00' : '#e9e3d3', 
+                            color: '#191A23',
+                            borderColor: '#191A23',
+                            borderStyle: isConfirmed ? 'solid' : 'dashed',
+                            fontStyle: isConfirmed ? 'normal' : 'italic'
+                          }}>
+                            {project?.name || 'Unknown'}
+                          </div>
+                        );
+                      })}
+                      {bs.length > 5 && <div className="text-xs px-2" style={{ color: '#575F60' }}>+{bs.length - 5} more</div>}
                     </div>
-                    <span 
-                      className="px-1 py-0.5 text-xs border"
-                      style={{
-                        backgroundColor: isPotential ? '#FFF8DC' : '#FFED00',
-                        borderColor: '#191A23',
-                        borderStyle: isPotential ? 'dashed' : 'solid',
-                        color: '#191A23'
-                      }}
-                    >
-                      {isPotential ? 'P' : 'C'}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {b.items.map((bi, idx) => {
-                      const it = items.find(item => item.id === bi.itemId);
-                      const isRainbow = it?.color && !it.color.startsWith('#');
-                      return (
-                        <div key={idx} className="flex items-center gap-2 text-xs">
-                          {it && (
-                            <div 
-                              className="w-4 h-4 border flex-shrink-0"
-                              style={{ 
-                                borderColor: '#575F60',
-                                ...(isRainbow
-                                  ? { background: 'linear-gradient(135deg, red, orange, yellow, green, blue, indigo, violet)' }
-                                  : { backgroundColor: it.color || '#9CA3AF' }
-                                )
-                              }}
-                            />
-                          )}
-                          <span style={{ color: '#575F60' }}>
-                            {it?.name} <span className="font-medium">x{bi.quantity}</span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
-        )}
+
+          {hover && hoverBookings.length > 0 && (
+            <div className="absolute z-10 border-2 p-4 shadow-lg" style={{ backgroundColor: 'white', borderColor: '#191A23', left: `${tooltipPos.x}px`, top: `${tooltipPos.y}px`, width: '320px', maxHeight: '400px', overflowY: 'auto' }}>
+              <div className="text-sm font-medium mb-3" style={{ color: '#191A23' }}>{formatDate(hover)}</div>
+              <div className="space-y-2">
+                {hoverBookings.map(b => {
+                  const project = projects.find(p => p.id === b.projectId);
+                  const isConfirmed = b.status === 'confirmed';
+                  
+                  return (
+                    <div key={b.id} className="border p-2" style={{ 
+                      borderColor: '#191A23',
+                      borderStyle: isConfirmed ? 'solid' : 'dashed',
+                      fontStyle: isConfirmed ? 'normal' : 'italic'
+                    }}>
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="flex-1 pr-2">
+                          <div className="text-sm font-medium" style={{ color: '#191A23' }}>{project?.name || 'Unknown'}</div>
+                          {project && (
+                            <div className="text-xs mt-1" style={{ color: '#575F60' }}>
+                              #{project.number} • {project.client}
+                            </div>
+                          )}
+                        </div>
+                        <span className="px-2 py-0.5 text-xs" style={{ 
+                          backgroundColor: isConfirmed ? '#FFED00' : '#e9e3d3', 
+                          color: '#191A23',
+                          borderRadius: '3px'
+                        }}>{b.status}</span>
+                      </div>
+                      <div className="text-xs mt-2" style={{ color: '#575F60' }}>{formatDate(b.startDate)} - {formatDate(b.endDate)}</div>
+                      <div className="text-xs mt-1" style={{ color: '#575F60' }}>{b.items.length} items</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

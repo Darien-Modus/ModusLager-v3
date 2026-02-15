@@ -4,7 +4,10 @@ export interface Item {
   totalQuantity: number;
   color?: string;
   groupId?: string;
-  image?: string;
+  images?: string[];  // Array of up to 5 images
+  iconIndex?: number;  // Which image is the icon (0-4)
+  dimensions?: string;
+  description?: string;
 }
 
 export interface Group {
@@ -12,6 +15,7 @@ export interface Group {
   name: string;
   color?: string;
   sortOrder?: number;
+  displayMode?: 'color' | 'image';
 }
 
 export interface Project {

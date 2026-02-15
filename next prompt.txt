@@ -1,38 +1,7 @@
-Nothing was fixed with the files you sent me. I think you need to change your approach in order to get it to work. 
+I must notice that today you are just making the files I didn't ask you to and making the changes I didn't ask you to.
 
-Issues:
+Items Page. The vertical colour strip is not fixed, it is still all the way to the left, when it should be grouped with the icon image without padding, so that the icon would feel like a continuation of the colour strip in case the colour is chosen as an icon. No border. It should also be like 5-10 times thicker than it is now, like it used to be. I don't know what did you change, but it doesn't seem to be in the ItemsPage file since I tried to replace it with the old one, and it was still the same.
 
+Add booking modal. This is a complete mess now. I don't want tags, I want the search to be a dropdown menu (works as a regular dropdown if you don't enter any values, but starts to narrow the options down when you start typing) while showing the icon of each item
 
-
-1. Page Title - "Live Inventory Overview", "Items", "Projects", "Bookings", "Calendar".
-
-The first 3 are ok, but "Bookings" and "Calendar" are off. They all need to have the same spacing from the header. The Bookings and the Calendar page also have the "Add Booking" button, and that button should be the same height and same vertical placement/spacing as the Page Title, only aligned to the right.
-
-
-
-2. Top Black Section - TBS for short. It needs to have the same spacing from the Page Title on every single page. On Overview and Items page this section has bigger height extending downwards than on the other 3.
-
-
-
-3. Top Black Section Title - The text displayed in yellow against the black background in the TBS. It needs to have the same spacing from the top and the left on Overview, Items and Projects, while the yellow text that says "Show" on Bookings and Calendar should stay centered on the TBS as they are now.
-
-
-
-4. Calendar still showing one day away on hover
-
-
-
-
-I would like to add a new feature to my app.
-
-Instead of adding new item on the top of the page in the Top Black Section, there should be a button now "Add a new item". The button opens a modal, much like the "add booking" modal, and in that modal you can do everything you could before and now you can also display and upload up to 5 images (that automatically shrink and convert to webp if they are over 100kb for example or whatever is the standard). There should be a field to input Dimensions and another a bit larger with several rows for Description.
-
-Same goes for "Add Group" button, it opens a modal, and in that modal you can input group name, and there should be a slide switch/button that lets you choose if you want the items in that group to show colours or images in the item icon.
-
-Add project becomes a modal, "search projects" (which btw crashes the app, please check it) moves to the TBS instead of add project. 
-
-Add booking buttons move straight down to the TBS.
-
-Item cards and display in list stays the same. All TBS are now the same height and have the same spacing from the Title and Header. They follow the size and spacing of the TBS on Projects page. "Show" yellow texts moves above, like "Add new project" on the project page, to have exactly the same formatting.
-
-Please don't try to do them all at once, it will just waste my credits as it will never finish, use the credits wisely.
+Since we have more space in the item cards in the overview page, we could adjust the height of the card so that it matches the combined width of the strip+icon so that they together are in a form of a square.

@@ -1,15 +1,23 @@
 import { Item, Booking } from '../types';
 
+// Format date to European format: dd-mm-yyyy
 export const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}/${m}/${y}`;
+  const date = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 };
 
+// Short format for calendar views
 export const formatDateShort = (dateStr: string) => {
   if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}/${m}/${y.slice(2)}`;
+  const date = new Date(dateStr + 'T00:00:00');
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = String(date.getFullYear()).slice(2);
+  return `${day}-${month}-${year}`;
 };
 
 export const calcAvailable = (
